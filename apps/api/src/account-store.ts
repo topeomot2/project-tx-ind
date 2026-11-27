@@ -1,5 +1,5 @@
 import postgres from "postgres";
-import type { AccountStore } from "./accounts.ts";
+import type { AccountStore, StoredUser } from "./accounts.ts";
 
 /** The Postgres adapter for AccountStore, plus table setup and shutdown. */
 export interface PostgresAccountStore extends AccountStore {
@@ -9,6 +9,25 @@ export interface PostgresAccountStore extends AccountStore {
   close(): Promise<void>;
 }
 
+/** A row of the users table. */
+interface Row {
+  id: string;
+  name: string;
+  email: string;
+  password_hash: string;
+  token_version: number;
+}
+
+function toStoredUser(row: Row): StoredUser {
+  return {
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    passwordHash: row.password_hash,
+    tokenVersion: row.token_version,
+  };
+}
+
 /** See specs/modules/account-store.md. Connects lazily, on first use. */
 export function createPostgresAccountStore(url: string): PostgresAccountStore {
   const sql = postgres(url, {
@@ -16,6 +35,7 @@ export function createPostgresAccountStore(url: string): PostgresAccountStore {
     connect_timeout: 2,
     onnotice: () => undefined,
   });
+
   const notImplemented = () => Promise.reject(new Error("NotImplemented"));
 
   return {
@@ -33,9 +53,26 @@ export function createPostgresAccountStore(url: string): PostgresAccountStore {
     async close() {
       await sql.end({ timeout: 5 });
     },
-    insertUser: notImplemented,
-    findUserByEmail: notImplemented,
-    findUserById: notImplemented,
+    async insertUser({ name, email, passwordHash }) {
+      const rows = await sql<Row[]>`
+        insert into users (name, email, password_hash)
+        values (${name}, ${email}, ${passwordHash})
+        on conflict (email) do nothing
+        returning *
+      `;
+      const [row] = rows;
+      return row === undefined ? "email_taken" : toStoredUser(row);
+    },
+    async findUserByEmail(email) {
+      const [row] = await sql<
+        Row[]
+      >`select * from users where email = ${email}`;
+      return row && toStoredUser(row);
+    },
+    async findUserById(id) {
+      const [row] = await sql<Row[]>`select * from users where id = ${id}`;
+      return row && toStoredUser(row);
+    },
     setPasswordHash: notImplemented,
   };
 }
