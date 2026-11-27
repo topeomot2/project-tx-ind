@@ -19,20 +19,28 @@ Everything a caller must know to use this module. Tests use only this.
 
 ### Exports
 
-| Export      | Kind     | Summary                                 |
-| ----------- | -------- | --------------------------------------- |
-| `createApp` | function | Returns the Hono app, not yet listening |
+| Export      | Kind     | Summary                                              |
+| ----------- | -------- | ---------------------------------------------------- |
+| `createApp` | function | `createApp({ db })`: the Hono app, not yet listening |
+| `Db`        | type     | What the app needs from its database (the seam)      |
+| `parseEnv`  | function | Reads `PORT` and `DATABASE_URL`; throws if invalid   |
 
 ### Error modes
 
-| Situation        | Result                                                        |
-| ---------------- | ------------------------------------------------------------- |
-| No route matches | `404`, `code: "not_found"`                                    |
-| A handler throws | `500`, `code: "internal_error"`; cause logged, never returned |
+| Situation                 | Result                                                        |
+| ------------------------- | ------------------------------------------------------------- |
+| No route matches          | `404`, `code: "not_found"`                                    |
+| A handler throws          | `500`, `code: "internal_error"`; cause logged, never returned |
+| Database down on `/ready` | `503`, `code: "not_ready"`                                    |
+| Invalid env               | `parseEnv` throws; the server does not start                  |
 
 ### Configuration
 
-- `PORT` (read by `server.ts`, not `createApp`): port to listen on. Default `3000`.
+- `PORT`: port to listen on. Default `3000`.
+- `DATABASE_URL`: Postgres connection URL. Default
+  `postgres://app:app@localhost:5432/app`, matching `compose.yaml`.
+
+Both are read by `server.ts` through `parseEnv`, never by `createApp`.
 
 ## Examples
 
@@ -51,6 +59,36 @@ Everything a caller must know to use this module. Tests use only this.
 - **Input:** a route that throws `Error("database password is hunter2")`
 - **Expected:** `500`, `ApiError` with `code: "internal_error"`, and the body
   does not contain the thrown message
+
+### API-4: GET /ready reports ready when the database answers
+
+- **Input:** `GET /ready`, with a `Db` that is reachable
+- **Expected:** `200`, `{ status: "ok", app: "api" }`
+
+### API-5: GET /ready returns not_ready when the database does not answer
+
+- **Input:** `GET /ready`, with a `Db` that is not reachable
+- **Expected:** `503`, `ApiError` with `code: "not_ready"`
+
+### API-6: GET /health does not depend on the database
+
+- **Input:** `GET /health`, with a `Db` that is not reachable
+- **Expected:** `200`
+
+### API-7: parseEnv uses defaults that match compose.yaml
+
+- **Input:** no variables set
+- **Expected:** `{ PORT: 3000, DATABASE_URL: "postgres://app:app@localhost:5432/app" }`
+
+### API-8: parseEnv reads the variables when set
+
+- **Input:** `PORT="8080"`, `DATABASE_URL="postgres://u:p@db:5432/x"`
+- **Expected:** `{ PORT: 8080, DATABASE_URL: "postgres://u:p@db:5432/x" }`
+
+### API-9: parseEnv rejects invalid settings
+
+- **Input:** `PORT` of `"zero"` or `"0"`, or a `DATABASE_URL` that is not a URL
+- **Expected:** throws
 
 ## Invariants
 

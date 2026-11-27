@@ -8,15 +8,19 @@
     "start": "node src/server.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
   },
   "dependencies": {
     "@hono/node-server": "catalog:",
     "@repo/contracts": "workspace:*",
-    "hono": "catalog:"
+    "hono": "catalog:",
+    "postgres": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
+    "@repo/services": "workspace:*",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "typescript": "catalog:",

@@ -1,0 +1,27 @@
+{
+  "apps": [
+    {
+      "name": "api",
+      "path": "apps/api",
+      "kind": "backend",
+      "language": "ts",
+      "services": ["postgres"]
+    }
+  ],
+  "services": [
+    {
+      "name": "postgres",
+      "compose": "compose.yaml",
+      "env": ["DATABASE_URL"]
+    }
+  ],
+  "locked": {
+    "hard": ["specs/product/**", "packages/contracts/**", "tests/e2e/**"],
+    "light": [
+      "specs/modules/**",
+      "**/*.test.ts",
+      "**/*.property.test.ts",
+      "**/*.integration.test.ts"
+    ]
+  }
+}

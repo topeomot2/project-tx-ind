@@ -15,8 +15,10 @@ catalog:
   eslint-config-prettier: 10.1.8
   fast-check: 4.11.0
   globals: 17.14.0
+  postgres: 4.1.1
   hono: 4.13.22
   prettier: 3.10.1
+  testcontainers: 12.2.2
   turbo: 2.11.13
   typescript: 6.0.3
   typescript-eslint: 8.74.0
@@ -30,3 +32,10 @@ engineStrict: true
 # 1 day (1440 minutes) ago. Most malicious releases are caught within hours.
 minimumReleaseAge: 1440
 minimumReleaseAgeStrict: true
+
+# Install scripts are blocked unless listed here. These come with
+# Testcontainers (via ssh2) and are optional native speed-ups: not needed.
+allowBuilds:
+  cpu-features: false
+  protobufjs: false
+  ssh2: false

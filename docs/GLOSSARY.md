@@ -96,8 +96,15 @@ From Matt Pocock's `codebase-design` skill (MIT).
 - **Is:** a backing process the apps need, run by Docker Compose: a
   database, a queue, a cache.
 - **Not:** an app or a module.
-- **Lives:** `compose.yaml`.
+- **Lives:** `compose.yaml`; started for tests by `@repo/services`.
 - **Avoid:** infra, dependency.
+
+### Manifest
+
+- **Is:** `factory.json`: the machine-readable list of apps (kind, language,
+  services) and locked paths. Tools and agents read it instead of guessing.
+- **Not:** configuration an app reads at runtime.
+- **Lives:** `factory.json` at the root.
 
 ### Contract
 
@@ -159,12 +166,20 @@ From Matt Pocock's `codebase-design` skill (MIT).
   generated inputs.
 - **Lives:** `src/**/*.property.test.ts`, next to the code.
 
+### Integration test
+
+- **Is:** a Vitest test of one module through its interface, against a real
+  service (e.g. Postgres) in a throwaway container. Needs Docker.
+- **Not:** an E2E test; it does not start apps or go through HTTP.
+- **Lives:** `src/**/*.integration.test.ts`, next to the code. Runs with
+  `pnpm test:integration`.
+
 ### E2E test
 
 - **Is:** a Playwright test that checks a product spec requirement against
   running apps, through their interface only.
 - **Lives:** `tests/e2e/src/**/*.spec.ts`.
-- **Avoid:** integration test, acceptance test, UI test.
+- **Avoid:** acceptance test, UI test, system test.
 
 ### Locked
 

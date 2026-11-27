@@ -24,7 +24,8 @@ export default defineConfig({
   webServer: [
     {
       command: "pnpm --filter @repo/api start",
-      url: `${apiURL}/health`,
+      // Ready, not just alive: the api can reach its database.
+      url: `${apiURL}/ready`,
       reuseExistingServer: !isCI,
     },
   ],

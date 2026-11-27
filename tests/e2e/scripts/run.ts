@@ -1,0 +1,20 @@
+// Starts the services, runs Playwright against them, then removes them.
+// Extra arguments go to Playwright: pnpm test:e2e -- --grep HEALTH
+import { spawn } from "node:child_process";
+import { startServices } from "@repo/services";
+
+const services = await startServices();
+
+const playwright = spawn("playwright", ["test", ...process.argv.slice(2)], {
+  stdio: "inherit",
+  env: { ...process.env, DATABASE_URL: services.databaseUrl },
+});
+
+const exitCode = await new Promise<number>((resolve) => {
+  playwright.on("exit", (code) => {
+    resolve(code ?? 1);
+  });
+});
+
+await services.stop();
+process.exitCode = exitCode;

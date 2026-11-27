@@ -2,11 +2,12 @@
 
 ## Levels
 
-| Test     | Checks                           | Tool                | Location                     | Gate            |
-| -------- | -------------------------------- | ------------------- | ---------------------------- | --------------- |
-| Unit     | One example from a module spec   | Vitest              | `src/**/*.test.ts`           | `pnpm check`    |
-| Property | One invariant from a module spec | Vitest + fast-check | `src/**/*.property.test.ts`  | `pnpm check`    |
-| E2E      | One product spec requirement     | Playwright          | `tests/e2e/src/**/*.spec.ts` | `pnpm test:e2e` |
+| Test        | Checks                             | Tool                    | Location                       | Gate                    |
+| ----------- | ---------------------------------- | ----------------------- | ------------------------------ | ----------------------- |
+| Unit        | One example from a module spec     | Vitest                  | `src/**/*.test.ts`             | `pnpm check`            |
+| Property    | One invariant from a module spec   | Vitest + fast-check     | `src/**/*.property.test.ts`    | `pnpm check`            |
+| Integration | One example against a real service | Vitest + Testcontainers | `src/**/*.integration.test.ts` | `pnpm test:integration` |
+| E2E         | One product spec requirement       | Playwright              | `tests/e2e/src/**/*.spec.ts`   | `pnpm test:e2e`         |
 
 E2E tests are the source of truth. Unit and property tests are the fast
 inner loop.
@@ -38,11 +39,20 @@ inner loop.
   Decide whether the spec or the code is wrong; never just exclude the case
   to get green.
 
+## Integration tests
+
+- Start services with `startServices()` from `@repo/services` in
+  `beforeAll`, and `stop()` them in `afterAll`. Never point a test at a
+  shared or long-running database.
+- Use them for adapters at a seam to a service (e.g. the Postgres adapter).
+  Everything above the seam is tested with a fake adapter in unit tests.
+
 ## E2E tests
 
 - Use only the apps' interface: HTTP via the `request` fixture, UI via
   `page`. Never import app code; shared shapes come from `@repo/contracts`.
-- Playwright starts the apps (`webServer` in `playwright.config.ts`).
+- `pnpm test:e2e` starts the services, then Playwright starts the apps
+  (`webServer` in `playwright.config.ts`).
 - No fixed waits (`waitForTimeout`). Wait for a condition or a response.
 - Each test sets up its own data and does not depend on another test.
 
@@ -50,7 +60,8 @@ inner loop.
 
 ```sh
 pnpm check                                # typecheck, lint, unit + property tests
-pnpm test:e2e                             # E2E
+pnpm test:integration                     # integration (needs Docker)
+pnpm test:e2e                             # E2E (needs Docker)
 pnpm --filter @repo/contracts test        # one package
 pnpm --filter @repo/api exec vitest       # watch mode
 ```

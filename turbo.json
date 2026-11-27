@@ -1,6 +1,12 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "stream",
+  "globalPassThroughEnv": [
+    "CI",
+    "DATABASE_URL",
+    "DOCKER_*",
+    "TESTCONTAINERS_*"
+  ],
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"]
@@ -14,6 +20,10 @@
     "test": {
       "dependsOn": ["transit"],
       "outputs": ["coverage/**"]
+    },
+    "test:integration": {
+      "dependsOn": ["transit"],
+      "cache": false
     },
     "test:e2e": {
       "dependsOn": ["transit"],

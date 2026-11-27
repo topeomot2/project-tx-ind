@@ -12,9 +12,12 @@
     "typecheck": "turbo run typecheck",
     "lint": "turbo run lint",
     "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
     "test:e2e": "turbo run test:e2e",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "services:up": "docker compose up -d --wait",
+    "services:down": "docker compose down"
   },
   "prettier": "@repo/config/prettier",
   "devDependencies": {

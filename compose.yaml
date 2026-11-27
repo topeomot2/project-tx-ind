@@ -1,0 +1,24 @@
+# Services the apps need. Nothing here is an app.
+#   Dev:   pnpm services:up   (Postgres on localhost:5432)
+#   Tests: started and removed by @repo/services, on a free port.
+services:
+  postgres:
+    image: postgres:18.7-alpine
+    environment:
+      POSTGRES_USER: app
+      POSTGRES_PASSWORD: app
+      POSTGRES_DB: app
+    ports:
+      # Dev publishes 5432:5432. Tests set POSTGRES_PORTS=5432, so Docker
+      # picks a free host port and parallel runs never clash.
+      - "${POSTGRES_PORTS:-5432:5432}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U app -d app"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+    volumes:
+      - postgres-data:/var/lib/postgresql
+
+volumes:
+  postgres-data:

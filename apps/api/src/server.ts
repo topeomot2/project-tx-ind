@@ -1,8 +1,21 @@
 import { serve } from "@hono/node-server";
 import { createApp } from "./app.ts";
+import { createPostgresDb } from "./db.ts";
+import { parseEnv } from "./env.ts";
 
-const port = Number(process.env["PORT"] ?? 3000);
+const env = parseEnv(process.env);
+const db = createPostgresDb(env.DATABASE_URL);
 
-serve({ fetch: createApp().fetch, port }, (info) => {
-  console.log(`api listening on http://localhost:${String(info.port)}`);
-});
+const server = serve(
+  { fetch: createApp({ db }).fetch, port: env.PORT },
+  (info) => {
+    console.log(`api listening on http://localhost:${String(info.port)}`);
+  },
+);
+
+for (const signal of ["SIGINT", "SIGTERM"] as const) {
+  process.once(signal, () => {
+    server.close();
+    void db.close();
+  });
+}
