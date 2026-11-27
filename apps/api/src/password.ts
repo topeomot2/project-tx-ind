@@ -22,7 +22,7 @@ function derive(
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     scrypt(
-      Buffer.from(password, "utf16le"),
+      Buffer.from(password.normalize("NFKC"), "utf16le"),
       salt,
       length,
       { N, r, p, maxmem: 256 * N * r },
