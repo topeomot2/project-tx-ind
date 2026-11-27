@@ -27,7 +27,7 @@ Everything a caller must know to use this module. Tests use only this.
 | `createAccounts` | function | `createAccounts({ store, now })`: an `Accounts`                  |
 | `Accounts`       | type     | `register`, `logIn`, `authenticate`, `changePassword` (below)    |
 | `AccountStore`   | type     | What accounts needs from storage (the seam)                      |
-| `StoredUser`     | type     | `{ id, email, passwordHash }`, as the store keeps a user         |
+| `StoredUser`     | type     | `{ id, name, email, passwordHash }`, as the store keeps a user   |
 | `StoredSession`  | type     | `{ tokenHash, userId, expiresAt: Date }`, as the store keeps one |
 | `Result`         | type     | `{ ok: true, value } \| { ok: false, code }`                     |
 
@@ -45,15 +45,15 @@ the storage.
 
 `AccountStore` (all async):
 
-| Method                                    | Does                                                                                      |
-| ----------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `insertUser({ email, passwordHash })`     | Adds a user with a new UUID; returns `StoredUser`, or `"email_taken"` if the email exists |
-| `findUserByEmail(email)`                  | `StoredUser \| undefined`; exact match                                                    |
-| `findUserById(id)`                        | `StoredUser \| undefined`                                                                 |
-| `setPasswordHash(userId, passwordHash)`   | Replaces the user's hash                                                                  |
-| `insertSession(StoredSession)`            | Adds a session                                                                            |
-| `findSession(tokenHash)`                  | `StoredSession \| undefined`                                                              |
-| `deleteSessionsExcept(userId, tokenHash)` | Removes the user's sessions other than `tokenHash`                                        |
+| Method                                      | Does                                                                                      |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| `insertUser({ name, email, passwordHash })` | Adds a user with a new UUID; returns `StoredUser`, or `"email_taken"` if the email exists |
+| `findUserByEmail(email)`                    | `StoredUser \| undefined`; exact match                                                    |
+| `findUserById(id)`                          | `StoredUser \| undefined`                                                                 |
+| `setPasswordHash(userId, passwordHash)`     | Replaces the user's hash                                                                  |
+| `insertSession(StoredSession)`              | Adds a session                                                                            |
+| `findSession(tokenHash)`                    | `StoredSession \| undefined`                                                              |
+| `deleteSessionsExcept(userId, tokenHash)`   | Removes the user's sessions other than `tokenHash`                                        |
 
 Rules a caller can rely on:
 
@@ -89,8 +89,9 @@ fixed clock.
 
 ### ACC-1: Register returns the new user with the email lowercased
 
-- **Input:** `register({ email: "Ada@Example.com", password: "correct horse battery" })`
-- **Expected:** `ok`, a `User` with a UUID `id` and `email: "ada@example.com"`
+- **Input:** `register({ name: "Ada Lovelace", email: "Ada@Example.com", password: "correct horse battery" })`
+- **Expected:** `ok`, a `User` with a UUID `id`, `name: "Ada Lovelace"`
+  and `email: "ada@example.com"`
 
 ### ACC-2: Register refuses an email that exists in another case
 
@@ -114,7 +115,8 @@ fixed clock.
 
 - **Input:** `authenticate` with the token from a log in; with a
   43-character token that was never issued
-- **Expected:** the logged-in `User`; `undefined`
+- **Expected:** the logged-in `User`, with the name it registered with;
+  `undefined`
 
 ### ACC-6: A token stops working when it expires
 

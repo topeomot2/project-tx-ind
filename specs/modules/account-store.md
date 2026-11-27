@@ -57,9 +57,9 @@ each other.
 
 ### STORE-2: A user that was inserted can be found by email and by id
 
-- **Input:** `insertUser({ email: "store2@example.com", passwordHash: "h1" })`,
+- **Input:** `insertUser({ name: "Store Two", email: "store2@example.com", passwordHash: "h1" })`,
   then `findUserByEmail` and `findUserById` with its result
-- **Expected:** both find `{ id, email: "store2@example.com", passwordHash: "h1" }`,
+- **Expected:** both find `{ id, name: "Store Two", email: "store2@example.com", passwordHash: "h1" }`,
   with a UUID `id`
 
 ### STORE-3: Inserting an email twice says email_taken

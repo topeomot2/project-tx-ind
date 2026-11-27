@@ -16,8 +16,8 @@ contracts:
 
 ## Why
 
-People need an account on the api: they register with an email and a
-password, log in to get a session token, and change their password. Later
+People need an account on the api: they register with a name, an email
+and a password, log in to get a session token, and change their password. Later
 endpoints use the token to know who is calling.
 
 ## Requirements
@@ -26,9 +26,10 @@ endpoints use the token to know who is calling.
 
 - **Given** no account exists for `ada@example.com`
 - **When** a caller sends `POST /users` with a `RegisterRequest` body
-  `{ email: "ada@example.com", password: "correct horse battery" }`
-- **Then** it gets status `201` and a `User` body with a new `id` and
-  `email: "ada@example.com"`, and the body holds no password or hash
+  `{ name: "Ada Lovelace", email: "ada@example.com", password: "correct horse battery" }`
+- **Then** it gets status `201` and a `User` body with a new `id`,
+  `name: "Ada Lovelace"` and `email: "ada@example.com"`, and the body
+  holds no password or hash
 
 ### USER-2: Registering an email that is taken fails
 
@@ -41,8 +42,9 @@ endpoints use the token to know who is calling.
 
 - **Given** the api is running
 - **When** a caller registers with a body that is not a valid
-  `RegisterRequest`: a malformed email, a password shorter than 12 or
-  longer than 128 characters, a missing field, or a body that is not JSON
+  `RegisterRequest`: a missing or blank name, a name longer than 100
+  characters, a malformed email, a password shorter than 12 or longer
+  than 128 characters, a missing field, or a body that is not JSON
 - **Then** it gets status `400` and an `ApiError` with
   `code: "validation_failed"`, and no account is created
 
@@ -109,6 +111,7 @@ endpoints use the token to know who is calling.
 - Rate limiting and account lockout after failed logins.
 - Checking passwords against breach lists.
 - Roles and permissions.
+- Changing the name after registering.
 
 ## Open questions
 
@@ -129,6 +132,9 @@ a different answer before this spec is approved.
 - NEEDS_CLARIFICATION (register logs in): registering returns only the
   `User`, and the caller logs in next (assumed), or should it also return
   a `Session`?
+- NEEDS_CLARIFICATION (name): one display name field, required, 1 to 100
+  characters after trimming outer spaces, any characters, not unique, and
+  returned in every `User` (assumed)? Or separate first and last names?
 - NEEDS_CLARIFICATION (other sessions): a password change ends every
   other session of the user and keeps the one that made the change
   (assumed, USER-9), or ends all of them, or none?

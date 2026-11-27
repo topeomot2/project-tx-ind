@@ -23,6 +23,7 @@ Everything a caller must know to use this module. Tests use only this.
 
 | Export                        | Kind   | Summary                                    |
 | ----------------------------- | ------ | ------------------------------------------ |
+| `NameSchema`                  | schema | A user's display name                      |
 | `EmailSchema`                 | schema | An email address, at most 254 characters   |
 | `PasswordSchema`              | schema | A password that follows the password rules |
 | `RegisterRequestSchema`       | schema | Body of `POST /users`                      |
@@ -32,13 +33,17 @@ Everything a caller must know to use this module. Tests use only this.
 | `ChangePasswordRequestSchema` | schema | Body of `PUT /users/me/password`           |
 
 Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
-`EmailSchema` and `PasswordSchema`.
+`NameSchema`, `EmailSchema` and `PasswordSchema`.
+
+- **Name** (`NameSchema`): outer spaces are trimmed, then 1 to 100
+  characters; any characters; not unique. Parsing returns the trimmed
+  name.
 
 - **Password rules** (`PasswordSchema`): 12 to 128 characters, as
   JavaScript counts string length; any characters, no composition rules.
-- `RegisterRequest` is `{ email, password }`; `password` follows the
+- `RegisterRequest` is `{ name, email, password }`; `password` follows the
   password rules.
-- `User` is `{ id, email }`: `id` is a UUID. Strict: any other key (such
+- `User` is `{ id, name, email }`: `id` is a UUID. Strict: any other key (such
   as a password hash) makes it invalid.
 - `LogInRequest` is `{ email, password }`; `password` is 1 to 128
   characters, so a password set under older rules can still log in.
@@ -63,7 +68,7 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 
 ### UCON-1: RegisterRequest accepts an email and a password that follows the rules
 
-- **Input:** `{ email: "ada@example.com", password: "correct horse battery" }`
+- **Input:** `{ name: "Ada Lovelace", email: "ada@example.com", password: "correct horse battery" }`
 - **Expected:** valid
 
 ### UCON-2: RegisterRequest rejects bad emails
@@ -78,12 +83,13 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 
 ### UCON-4: RegisterRequest rejects a missing field
 
-- **Input:** `{ email: "ada@example.com" }`; `{ password: "correct horse battery" }`
-- **Expected:** invalid; invalid
+- **Input:** the UCON-1 body without `name`, without `email`, and without
+  `password`
+- **Expected:** invalid each time
 
 ### UCON-5: User rejects a body with extra keys
 
-- **Input:** `{ id: "6f1c2a4e-8b3d-4c5e-9f70-1a2b3c4d5e6f", email: "ada@example.com" }`,
+- **Input:** `{ id: "6f1c2a4e-8b3d-4c5e-9f70-1a2b3c4d5e6f", name: "Ada Lovelace", email: "ada@example.com" }`,
   and the same with `passwordHash: "x"` added
 - **Expected:** valid; invalid
 
@@ -104,6 +110,13 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
   `currentPassword: "correct horse battery"` with an 11-character
   `newPassword`
 - **Expected:** valid; invalid
+
+### UCON-10: RegisterRequest trims the name and enforces its length
+
+- **Input:** name `"  Ada Lovelace  "`; `""`; `"   "`; 100 `"a"`s; 101
+  `"a"`s
+- **Expected:** valid with name `"Ada Lovelace"`; invalid; invalid; valid;
+  invalid
 
 ## Invariants
 

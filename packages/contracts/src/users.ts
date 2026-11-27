@@ -9,8 +9,15 @@ export const EmailSchema = z.email().max(254);
  */
 export const PasswordSchema = z.string().min(12).max(128);
 
+/**
+ * A user's display name: 1 to 100 characters after trimming outer spaces.
+ * Any characters; not unique.
+ */
+export const NameSchema = z.string().trim().min(1).max(100);
+
 /** Body of POST /users. */
 export const RegisterRequestSchema = z.object({
+  name: NameSchema,
   email: EmailSchema,
   password: PasswordSchema,
 });
@@ -20,6 +27,7 @@ export type RegisterRequest = z.infer<typeof RegisterRequestSchema>;
 /** A user as the api shows it. Never holds the password or its hash. */
 export const UserSchema = z.strictObject({
   id: z.uuid(),
+  name: NameSchema,
   email: EmailSchema,
 });
 

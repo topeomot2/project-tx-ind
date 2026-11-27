@@ -6,6 +6,7 @@ export {
   ChangePasswordRequestSchema,
   EmailSchema,
   LogInRequestSchema,
+  NameSchema,
   PasswordSchema,
   RegisterRequestSchema,
   SessionSchema,
