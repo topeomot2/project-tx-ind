@@ -1,6 +1,6 @@
 ---
 id: PWD
-status: draft
+status: approved
 contracts: []
 ---
 
@@ -39,6 +39,8 @@ Everything a caller must know to use this module. Tests use only this.
   change later and old hashes still verify. Its exact format is not part
   of the interface.
 - `verifyPassword` compares in constant time.
+- Both functions normalize the password with Unicode NFKC before hashing,
+  so passwords that look the same but are encoded differently match.
 
 ## Examples
 
@@ -64,15 +66,23 @@ Everything a caller must know to use this module. Tests use only this.
   `"not a hash"` and `"scrypt$1$2$3$x$y"`
 - **Expected:** `false` each time
 
+### PWD-7: Passwords that differ only in Unicode encoding match
+
+- **Input:** hash `"café au lait please"` written with `é` as one code
+  point (U+00E9); verify it written as `e` + U+0301. Hash
+  `"\uFB01rst password here"` (the `ﬁ` ligature); verify
+  `"first password here"`
+- **Expected:** `true` both times
+
 ## Invariants
 
 ### PWD-5: Every password verifies against its own hash
 
-For every string of 1 to 128 characters, `verifyPassword(p, await hashPassword(p))` is `true`.
+For every string of 1 to 128 code points, `verifyPassword(p, await hashPassword(p))` is `true`.
 
 ### PWD-6: No other password verifies against a hash
 
-For every two different strings `p` and `q` of 1 to 128 characters,
+For every two different strings `p` and `q` of 1 to 128 code points whose NFKC forms differ,
 `verifyPassword(q, await hashPassword(p))` is `false`.
 
 Hashing is slow on purpose, so these two run with few generated inputs
@@ -80,7 +90,4 @@ Hashing is slow on purpose, so these two run with few generated inputs
 
 ## Open questions
 
-- NEEDS_CLARIFICATION (algorithm): scrypt from `node:crypto` (assumed) or
-  argon2id? argon2id is the first choice in the OWASP cheat sheet, but it
-  needs a new package with a native build, and both the pnpm catalog and
-  `allowBuilds` are in the hard-locked `pnpm-workspace.yaml`.
+- None. scrypt from `node:crypto` agreed by Temitope on 2026-11-27.

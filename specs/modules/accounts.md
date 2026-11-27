@@ -1,6 +1,6 @@
 ---
 id: ACC
-status: draft
+status: approved
 contracts: [RegisterRequest, User, LogInRequest, Session, ChangePasswordRequest]
 ---
 
@@ -174,5 +174,4 @@ the tokens differ.
 
 ## Open questions
 
-- Follows the answers in `specs/product/users.md` (email case, password
-  rules).
+- None. Answers are in `specs/product/users.md`.

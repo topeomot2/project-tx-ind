@@ -1,6 +1,6 @@
 ---
 id: UCON
-status: draft
+status: approved
 contracts: [RegisterRequest, User, LogInRequest, Session, ChangePasswordRequest]
 ---
 
@@ -38,21 +38,21 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 - **Name** (`NameSchema`): outer spaces are trimmed, then 1 to 100
   characters; any characters; not unique. Parsing returns the trimmed
   name.
-
-- **Password rules** (`PasswordSchema`): 12 to 128 characters, as
-  JavaScript counts string length; any characters, no composition rules.
+- **Password rules** (`PasswordSchema`): 15 to 128 characters, counted as
+  Unicode code points (an emoji is one character); any characters; no
+  composition rules.
 - `RegisterRequest` is `{ name, email, password }`; `password` follows the
   password rules.
-- `User` is `{ id, name, email }`: `id` is a UUID. Strict: any other key (such
-  as a password hash) makes it invalid.
-- `LogInRequest` is `{ email, password }`; `password` is 1 to 128
-  characters, so a password set under older rules can still log in.
-- `Session` is `{ token, expiresAt }`: `token` is a JWT (three base64url
-  parts joined by dots, with a JSON header); `expiresAt` is an ISO 8601
-  UTC time. Strict.
+- `User` is `{ id, name, email }`: `id` is a UUID. Strict: any other key
+  (such as a password hash) makes it invalid.
+- `LogInRequest` is `{ email, password }`; `password` is any non-empty
+  string up to 512 JavaScript characters, so a password set under older
+  rules can still log in.
+- `Session` is `{ token, expiresAt }`: `token` is a JWT; `expiresAt` is an
+  ISO 8601 UTC time. Strict.
 - `ChangePasswordRequest` is `{ currentPassword, newPassword }`:
-  `currentPassword` is 1 to 128 characters; `newPassword` follows the
-  password rules.
+  `currentPassword` is like `LogInRequest.password`; `newPassword` follows
+  the password rules.
 
 ### Error modes
 
@@ -67,7 +67,7 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 
 ## Examples
 
-### UCON-1: RegisterRequest accepts an email and a password that follows the rules
+### UCON-1: RegisterRequest accepts a name, an email and a password that follows the rules
 
 - **Input:** `{ name: "Ada Lovelace", email: "ada@example.com", password: "correct horse battery" }`
 - **Expected:** valid
@@ -79,7 +79,7 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 
 ### UCON-3: RegisterRequest enforces the password length limits
 
-- **Input:** passwords of 11, 12, 128 and 129 characters
+- **Input:** ASCII passwords of 14, 15, 128 and 129 characters
 - **Expected:** invalid, valid, valid, invalid
 
 ### UCON-4: RegisterRequest rejects a missing field
@@ -107,8 +107,8 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 
 ### UCON-8: ChangePasswordRequest applies the password rules to the new password only
 
-- **Input:** `currentPassword: "short"` with a 12-character `newPassword`;
-  `currentPassword: "correct horse battery"` with an 11-character
+- **Input:** `currentPassword: "short"` with a 15-character `newPassword`;
+  `currentPassword: "correct horse battery"` with a 14-character
   `newPassword`
 - **Expected:** valid; invalid
 
@@ -119,14 +119,20 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 - **Expected:** valid with name `"Ada Lovelace"`; invalid; invalid; valid;
   invalid
 
+### UCON-11: Password length counts code points, not JavaScript characters
+
+- **Input:** passwords of 15, 128 and 129 copies of `"🔑"` (each is two
+  JavaScript characters); 14 copies
+- **Expected:** valid, valid, invalid; invalid
+
 ## Invariants
 
 ### UCON-9: Length alone decides whether a password follows the rules
 
-For every string, `PasswordSchema` accepts it exactly when its length is
-from 12 to 128.
+For every string, `PasswordSchema` accepts it exactly when it has 15 to
+128 code points.
 
 ## Open questions
 
-- Password rules follow the answer to "password rules" in
-  `specs/product/users.md`.
+- None. Password rules answered by Temitope on 2026-11-27 (see
+  `specs/product/users.md`).

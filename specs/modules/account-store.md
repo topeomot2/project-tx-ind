@@ -1,6 +1,6 @@
 ---
 id: STORE
-status: draft
+status: approved
 contracts: []
 ---
 
@@ -86,7 +86,5 @@ each other.
 
 ## Open questions
 
-- NEEDS_CLARIFICATION (migrations): `migrate()` with
-  `create table if not exists`, run by `server.ts` at start (assumed), or
-  a migration tool with numbered files? The simple way is fine for one
-  table but has no story for changing a column later.
+- None. `migrate()` with `create table if not exists`, run by `server.ts`
+  at start, agreed by Temitope on 2026-11-27.

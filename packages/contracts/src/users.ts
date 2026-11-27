@@ -3,11 +3,18 @@ import { z } from "zod";
 /** An email address as callers send it. Compared without case by the api. */
 export const EmailSchema = z.email().max(254);
 
+/** Number of Unicode code points, so an emoji counts as one character. */
+const codePoints = (text: string): number => [...text].length;
+
 /**
- * A password that follows the password rules: 12 to 128 characters
- * (as JavaScript counts string length), any characters.
+ * A password that follows the password rules: 15 to 128 characters,
+ * counted as Unicode code points, any characters.
  */
-export const PasswordSchema = z.string().min(12).max(128);
+export const PasswordSchema = z
+  .string()
+  .refine((text) => codePoints(text) >= 15 && codePoints(text) <= 128, {
+    message: "A password has 15 to 128 characters.",
+  });
 
 /**
  * A user's display name: 1 to 100 characters after trimming outer spaces.
@@ -39,7 +46,7 @@ export type User = z.infer<typeof UserSchema>;
  */
 export const LogInRequestSchema = z.object({
   email: EmailSchema,
-  password: z.string().min(1).max(128),
+  password: z.string().min(1).max(512),
 });
 
 export type LogInRequest = z.infer<typeof LogInRequestSchema>;
@@ -56,7 +63,7 @@ export type Session = z.infer<typeof SessionSchema>;
 
 /** Body of PUT /users/me/password. */
 export const ChangePasswordRequestSchema = z.object({
-  currentPassword: z.string().min(1).max(128),
+  currentPassword: z.string().min(1).max(512),
   newPassword: PasswordSchema,
 });
 
