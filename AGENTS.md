@@ -60,6 +60,8 @@ Both sides follow `tdd-contracts`. For module and interface design, use
 - `spec/<topic>`: spec and test work (specs, contracts, tests, stubs).
 - `impl/<topic>`: implementation work. Any other branch name counts as
   implementation work.
+- Stacked: a PR from `impl/<topic>` targets `spec/<topic>`. Once green,
+  `spec/<topic>` merges to `main` in one PR.
 
 ## Locked paths
 

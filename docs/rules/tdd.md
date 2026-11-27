@@ -40,7 +40,7 @@ what makes a good test.
 
 | Rule                                       | Enforced by                                          |
 | ------------------------------------------ | ---------------------------------------------------- |
-| New tests fail for the right reason first  | `pnpm check:red` on `spec/` pull requests            |
+| New tests fail for the right reason first  | `pnpm check:red` on `spec/` PRs, at locking commit   |
 | Implementation does not touch locked paths | `pnpm check:locks` + `.github/CODEOWNERS`            |
 | No `.only`, `.skip` or `.todo`             | ESLint, in `pnpm check`                              |
 | Types are clean                            | `tsc --noEmit`, in `pnpm check`                      |

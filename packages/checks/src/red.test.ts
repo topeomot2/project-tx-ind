@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { classifyFailure, redProblems } from "./red.ts";
+import {
+  classifyFailure,
+  filesToRestore,
+  lockingCommit,
+  redProblems,
+  redTestFiles,
+} from "./red.ts";
 
 const failed = (title: string, message: string) => ({
   title,
@@ -60,5 +66,62 @@ describe("RED check", () => {
     ]);
 
     expect(problems).toEqual([]);
+  });
+
+  it("CHK-11: the locking commit is the newest that changed a unit or property test", () => {
+    const commits = [
+      { sha: "c4", files: ["apps/shop/src/orders.ts"] },
+      { sha: "c3", files: ["apps/shop/src/orders.integration.test.ts"] },
+      { sha: "c2", files: ["apps/shop/src/orders.property.test.ts"] },
+      { sha: "c1", files: ["apps/shop/src/orders.test.ts"] },
+    ];
+
+    expect(lockingCommit(commits)).toBe("c2");
+  });
+
+  it("CHK-11: there is no locking commit when no commit changed a test", () => {
+    const commits = [{ sha: "c1", files: ["apps/shop/src/orders.ts"] }];
+
+    expect(lockingCommit(commits)).toBeUndefined();
+  });
+
+  it("CHK-12: puts unlocked files back as they were at the locking commit", () => {
+    const plan = filesToRestore({
+      changes: [
+        { status: "M", path: "apps/shop/src/orders.ts" },
+        { status: "A", path: "apps/shop/src/orders-db.ts" },
+        { status: "D", path: "apps/shop/src/old.ts" },
+        { status: "M", path: "apps/shop/src/orders.test.ts" },
+        { status: "M", path: "specs/modules/orders.md" },
+      ],
+      locked: ["**/*.test.ts", "specs/modules/**"],
+    });
+
+    expect(plan).toEqual({
+      restore: ["apps/shop/src/orders.ts", "apps/shop/src/old.ts"],
+      remove: ["apps/shop/src/orders-db.ts"],
+    });
+  });
+
+  it("CHK-13: judges unit and property tests, and skips contract and checks tests", () => {
+    const files = redTestFiles([
+      "packages/contracts/src/orders.test.ts",
+      "packages/checks/src/red.test.ts",
+      "apps/shop/src/orders.test.ts",
+      "apps/shop/src/orders.property.test.ts",
+      "apps/shop/src/db.integration.test.ts",
+      "apps/shop/src/orders.ts",
+    ]);
+
+    expect(files).toEqual({
+      judged: [
+        "apps/shop/src/orders.test.ts",
+        "apps/shop/src/orders.property.test.ts",
+      ],
+      skipped: [
+        "packages/contracts/src/orders.test.ts",
+        "packages/checks/src/red.test.ts",
+      ],
+    });
   });
 });

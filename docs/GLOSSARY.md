@@ -188,6 +188,13 @@ From Matt Pocock's `codebase-design` skill (MIT).
   lock**: a reviewer approves a proposed change.
 - **Avoid:** frozen, read-only, protected.
 
+### Locking commit
+
+- **Is:** the newest commit on a spec branch that changed a unit or
+  property test. `pnpm check:red` judges RED as the branch was then, so
+  implementation merged into a stacked spec branch does not break it.
+- **Lives:** `lockingCommit` in `packages/checks`.
+
 ### Mutation testing
 
 - **Is:** checking that tests catch bugs by planting small bugs

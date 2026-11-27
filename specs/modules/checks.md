@@ -30,6 +30,9 @@ Everything a caller must know to use this module. Tests use only this.
 | `lockViolations`    | function | Changed files a kind of work may not touch                       |
 | `classifyFailure`   | function | Why a test failed: assertion, NotImplemented, or other           |
 | `redProblems`       | function | New requirement tests that do not fail for the right reason      |
+| `lockingCommit`     | function | The newest commit that changed a unit or property test           |
+| `filesToRestore`    | function | Unlocked files to put back as they were at the locking commit    |
+| `redTestFiles`      | function | Test files RED judges, and the ones it skips                     |
 
 CLIs, run from the repo root: `pnpm check:spec-ids`, `pnpm check:locks`,
 `pnpm check:red`.
@@ -105,6 +108,37 @@ CLIs, run from the repo root: `pnpm check:spec-ids`, `pnpm check:locks`,
 - **Input:** new IDs `ORD-2`; `ORD-1` passes, `ORD-2` fails with an
   assertion
 - **Expected:** no problems
+
+### CHK-11: Finds the locking commit
+
+- **Input:** commits newest first: `c4` changes a source file, `c3` an
+  integration test, `c2` a property test, `c1` a unit test; and a second
+  case where no commit changes a test
+- **Expected:** `c2`; then no locking commit
+- **Why:** `pnpm check:red` judges the branch as it was at the locking
+  commit, so a spec branch that implementation was merged into (a stacked
+  branch) stays checkable.
+
+### CHK-12: Puts unlocked files back as they were at the locking commit
+
+- **Input:** changes since the locking commit: a source file modified, one
+  added, one deleted, a test modified and a module spec modified; locked
+  `**/*.test.ts`, `specs/modules/**`
+- **Expected:** restore the modified and the deleted source files; remove
+  the added one; leave the test and the spec alone
+- **Why:** the CLI writes these files for the run and always puts HEAD's
+  versions back afterwards.
+
+### CHK-13: Contract and checks tests are not judged by RED
+
+- **Input:** changed files: a contract test, a checks test, a unit test, a
+  property test, an integration test and a source file
+- **Expected:** judged: the unit and property tests; skipped: the contract
+  test and the checks test
+- **Why:** contracts are real schemas approved with the spec, so their
+  tests pass before any implementation. The checks are tooling, changed
+  only on spec branches with human approval, and land with their
+  implementation. The CLI prints how many test IDs it skipped.
 
 ## Invariants
 
