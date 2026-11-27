@@ -1,6 +1,7 @@
 # Third-party notices
 
-Text in this repo that is copied or closely adapted from other projects.
+This repo is MIT licensed (see `/LICENSE`). Text in it that is copied or
+closely adapted from other projects keeps its own notice:
 
 | Licence file                       | Source                                                      | Used in                                                                         |
 | ---------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------- |

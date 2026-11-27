@@ -19,6 +19,7 @@
 /.github/              @topeomot2
 /packages/checks/      @topeomot2
 /factory.json          @topeomot2
+/LICENSE               @topeomot2
 /packages/config/      @topeomot2
 
 # Settings that decide what gets checked

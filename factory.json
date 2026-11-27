@@ -25,6 +25,7 @@
       ".agents/**",
       ".github/**",
       "factory.json",
+      "LICENSE",
       "packages/checks/**",
       "packages/config/**",
       "package.json",
