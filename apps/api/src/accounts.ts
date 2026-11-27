@@ -6,10 +6,18 @@ import type {
   User,
 } from "@repo/contracts";
 import { randomUUID } from "node:crypto";
-import { sign } from "hono/jwt";
+import { sign, verify } from "hono/jwt";
+import { z } from "zod";
 import { hashPassword, verifyPassword } from "./password.ts";
 
 const sessionSeconds = 24 * 60 * 60;
+
+/** The token claims accounts relies on. */
+const ClaimsSchema = z.object({
+  sub: z.string(),
+  ver: z.number().int(),
+  exp: z.number(),
+});
 
 let dummy: Promise<string> | undefined;
 /** A hash no password matches, made once, for logins with unknown emails. */
@@ -83,6 +91,28 @@ export function createAccounts({
     return { token, expiresAt: new Date(exp * 1000).toISOString() };
   }
 
+  /** The stored user a token belongs to, if the token is valid now. */
+  async function userOf(token: string): Promise<StoredUser | undefined> {
+    let payload: unknown;
+    try {
+      // Expiry is checked against now() below, not the real clock.
+      payload = await verify(token, jwtSecret, {
+        alg: "HS256",
+        exp: false,
+        iat: false,
+        nbf: false,
+      });
+    } catch {
+      return undefined;
+    }
+    const claims = ClaimsSchema.safeParse(payload);
+    if (!claims.success || now().getTime() >= claims.data.exp * 1000) {
+      return undefined;
+    }
+    const user = await store.findUserById(claims.data.sub);
+    return user?.tokenVersion === claims.data.ver ? user : undefined;
+  }
+
   const notImplemented = () => Promise.reject(new Error("NotImplemented"));
   return {
     async register({ name, email, password }) {
@@ -108,7 +138,10 @@ export function createAccounts({
       }
       return { ok: true, value: await issueSession(user) };
     },
-    authenticate: notImplemented,
+    async authenticate(token) {
+      const user = await userOf(token);
+      return user && toUser(user);
+    },
     changePassword: notImplemented,
   };
 }
