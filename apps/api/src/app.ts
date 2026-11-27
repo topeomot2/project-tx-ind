@@ -44,7 +44,13 @@ export function createApp({ db, accounts }: AppDeps): Hono {
     const body = RegisterRequestSchema.parse(await c.req.json());
     const result = await accounts.register(body);
     if (!result.ok) {
-      throw new Error(result.code);
+      return c.json(
+        {
+          code: "email_taken",
+          message: "An account with this email exists.",
+        } satisfies ApiError,
+        409,
+      );
     }
     return c.json(result.value satisfies User, 201);
   });
