@@ -21,11 +21,9 @@ export function createConfig({ rootDir }) {
       languageOptions: {
         globals: globals.node,
         parserOptions: {
-          // Tool config files (eslint.config.js, vitest.config.ts...) get
-          // type info even when the package tsconfig does not include them.
-          projectService: {
-            allowDefaultProject: ["*.config.js", "*.config.ts"],
-          },
+          // eslint.config.js gets type info even in a TS-only package.
+          // TS config files (vitest.config.ts...) go in the package tsconfig.
+          projectService: { allowDefaultProject: ["*.config.js"] },
           tsconfigRootDir: rootDir,
         },
       },

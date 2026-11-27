@@ -8,7 +8,7 @@
     "./tsconfig/js.json": "./tsconfig/js.json",
     "./eslint": "./src/eslint.js",
     "./prettier": "./src/prettier.js",
-    "./vitest": "./src/vitest.js"
+    "./vitest": "./src/vitest.ts"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
