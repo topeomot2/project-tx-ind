@@ -1,4 +1,9 @@
-import type { ApiError, Health } from "@repo/contracts";
+import {
+  RegisterRequestSchema,
+  type ApiError,
+  type Health,
+  type User,
+} from "@repo/contracts";
 import { Hono } from "hono";
 import type { Accounts } from "./accounts.ts";
 import type { Db } from "./db.ts";
@@ -13,8 +18,7 @@ export interface AppDeps {
  * `app.request()` directly and the entry point (server.ts) stays tiny.
  * Dependencies come in as parameters, so tests can pass fakes.
  */
-export function createApp({ db }: AppDeps): Hono {
-  // Stub: the user routes (using deps.accounts) follow specs/product/users.md.
+export function createApp({ db, accounts }: AppDeps): Hono {
   const app = new Hono();
   const healthy: Health = { status: "ok", app: "api" };
 
@@ -33,6 +37,16 @@ export function createApp({ db }: AppDeps): Hono {
       } satisfies ApiError,
       503,
     );
+  });
+
+  // User routes: specs/product/users.md.
+  app.post("/users", async (c) => {
+    const body = RegisterRequestSchema.parse(await c.req.json());
+    const result = await accounts.register(body);
+    if (!result.ok) {
+      throw new Error(result.code);
+    }
+    return c.json(result.value satisfies User, 201);
   });
 
   app.notFound((c) =>
