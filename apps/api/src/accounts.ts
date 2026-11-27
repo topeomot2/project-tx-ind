@@ -113,7 +113,6 @@ export function createAccounts({
     return user?.tokenVersion === claims.data.ver ? user : undefined;
   }
 
-  const notImplemented = () => Promise.reject(new Error("NotImplemented"));
   return {
     async register({ name, email, password }) {
       const stored = await store.insertUser({
@@ -142,7 +141,20 @@ export function createAccounts({
       const user = await userOf(token);
       return user && toUser(user);
     },
-    changePassword: notImplemented,
+    async changePassword(token, { currentPassword, newPassword }) {
+      const user = await userOf(token);
+      if (user === undefined) {
+        return { ok: false, code: "unauthenticated" };
+      }
+      if (!(await verifyPassword(currentPassword, user.passwordHash))) {
+        return { ok: false, code: "invalid_credentials" };
+      }
+      const updated = await store.setPasswordHash(
+        user.id,
+        await hashPassword(newPassword),
+      );
+      return { ok: true, value: await issueSession(updated) };
+    },
   };
 }
 
