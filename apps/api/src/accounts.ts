@@ -5,7 +5,18 @@ import type {
   Session,
   User,
 } from "@repo/contracts";
-import { hashPassword } from "./password.ts";
+import { randomUUID } from "node:crypto";
+import { sign } from "hono/jwt";
+import { hashPassword, verifyPassword } from "./password.ts";
+
+const sessionSeconds = 24 * 60 * 60;
+
+let dummy: Promise<string> | undefined;
+/** A hash no password matches, made once, for logins with unknown emails. */
+function dummyHash(): Promise<string> {
+  dummy ??= hashPassword(randomUUID());
+  return dummy;
+}
 
 /** The outcome of an operation that can fail in an expected way. */
 export type Result<T, E extends string> =
@@ -55,7 +66,23 @@ export interface AccountsDeps {
 }
 
 /** Accounts over a store. See specs/modules/accounts.md. */
-export function createAccounts({ store }: AccountsDeps): Accounts {
+export function createAccounts({
+  store,
+  now,
+  jwtSecret,
+}: AccountsDeps): Accounts {
+  /** A session for a user, valid for 24 hours from now(). */
+  async function issueSession(user: StoredUser): Promise<Session> {
+    const iat = Math.floor(now().getTime() / 1000);
+    const exp = iat + sessionSeconds;
+    const token = await sign(
+      { sub: user.id, ver: user.tokenVersion, iat, exp, jti: randomUUID() },
+      jwtSecret,
+      "HS256",
+    );
+    return { token, expiresAt: new Date(exp * 1000).toISOString() };
+  }
+
   const notImplemented = () => Promise.reject(new Error("NotImplemented"));
   return {
     async register({ name, email, password }) {
@@ -69,7 +96,18 @@ export function createAccounts({ store }: AccountsDeps): Accounts {
       }
       return { ok: true, value: toUser(stored) };
     },
-    logIn: notImplemented,
+    async logIn({ email, password }) {
+      const user = await store.findUserByEmail(email.toLowerCase());
+      // Same hashing work for an unknown email, so timing does not tell.
+      const matches = await verifyPassword(
+        password,
+        user?.passwordHash ?? (await dummyHash()),
+      );
+      if (user === undefined || !matches) {
+        return { ok: false, code: "invalid_credentials" };
+      }
+      return { ok: true, value: await issueSession(user) };
+    },
     authenticate: notImplemented,
     changePassword: notImplemented,
   };
