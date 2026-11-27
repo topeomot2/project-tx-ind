@@ -1,7 +1,8 @@
 # @repo/e2e
 
-End-to-end tests with Playwright. Each test checks one behaviour from a
-product spec in `specs/`, against the running apps.
+End-to-end tests with Playwright. Each test checks one requirement from a
+product spec in `specs/product/`, against the running apps, and its name
+starts with the requirement ID (e.g. `HEALTH-1: ...`).
 
 - Tests live in `src/` and are named `*.spec.ts`.
 - They use only the public surface of an app (HTTP API or browser), never

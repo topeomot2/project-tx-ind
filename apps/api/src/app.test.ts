@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createApp } from "./app.ts";
 
 describe("api", () => {
-  it("reports healthy on GET /health", async () => {
+  it("API-1: reports healthy on GET /health", async () => {
     const response = await createApp().request("/health");
 
     expect(response.status).toBe(200);
@@ -13,14 +13,14 @@ describe("api", () => {
     });
   });
 
-  it("answers an unknown route with a not_found error", async () => {
+  it("API-2: answers an unknown route with a not_found error", async () => {
     const response = await createApp().request("/nope");
 
     expect(response.status).toBe(404);
     expect(ApiErrorSchema.parse(await response.json()).code).toBe("not_found");
   });
 
-  it("answers a crash with internal_error and hides the cause", async () => {
+  it("API-3: answers a crash with internal_error and hides the cause", async () => {
     vi.spyOn(console, "error").mockImplementation(() => undefined);
     const app = createApp();
     app.get("/boom", () => {

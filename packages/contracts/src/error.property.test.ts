@@ -20,7 +20,7 @@ const validApiError = fc.record(
 );
 
 describe("ApiErrorSchema properties", () => {
-  it("accepts every valid error unchanged", () => {
+  it("CON-7: accepts every valid error unchanged", () => {
     fc.assert(
       fc.property(validApiError, (error) => {
         expect(ApiErrorSchema.parse(error)).toEqual(error);
@@ -28,7 +28,7 @@ describe("ApiErrorSchema properties", () => {
     );
   });
 
-  it("still accepts an error after it crosses a JSON boundary", () => {
+  it("CON-8: still accepts an error after it crosses a JSON boundary", () => {
     // Compare with what arrives, not with the original: JSON changes some
     // values on the way (fast-check found that -0 arrives as 0).
     fc.assert(
@@ -40,7 +40,7 @@ describe("ApiErrorSchema properties", () => {
     );
   });
 
-  it("rejects any code with a character outside a-z, 0-9 and _", () => {
+  it("CON-9: rejects any code outside the allowed pattern", () => {
     const badCode = fc
       .string({ minLength: 1 })
       .filter((code) => !/^[a-z][a-z0-9_]*$/.test(code));

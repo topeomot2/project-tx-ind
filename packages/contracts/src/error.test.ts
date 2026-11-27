@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ApiErrorSchema } from "./index.ts";
 
 describe("ApiErrorSchema", () => {
-  it("accepts a code and a message", () => {
+  it("CON-1: accepts a code and a message", () => {
     const result = ApiErrorSchema.safeParse({
       code: "not_found",
       message: "No order with that id.",
@@ -11,7 +11,7 @@ describe("ApiErrorSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts structured details", () => {
+  it("CON-2: accepts structured details", () => {
     const result = ApiErrorSchema.safeParse({
       code: "validation_failed",
       message: "The request was not valid.",
@@ -22,7 +22,7 @@ describe("ApiErrorSchema", () => {
   });
 
   it.each(["NotFound", "not-found", "1_bad", "", "has space"])(
-    "rejects the code %j",
+    "CON-3: rejects the code %j",
     (code) => {
       const result = ApiErrorSchema.safeParse({ code, message: "x" });
 
@@ -30,7 +30,7 @@ describe("ApiErrorSchema", () => {
     },
   );
 
-  it("rejects an empty message", () => {
+  it("CON-4: rejects an empty message", () => {
     const result = ApiErrorSchema.safeParse({ code: "oops", message: "" });
 
     expect(result.success).toBe(false);
