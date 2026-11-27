@@ -1,38 +1,43 @@
 # TDD rules
 
-Work in small vertical slices: one requirement, one failing test, the
-least code that passes it, then tidy up.
+Specs and tests come first; code makes them pass. Two roles, kept apart:
 
-## Who writes what
+- **Spec and test work** (`.agents/skills/write-specs`) writes specs,
+  contracts, tests and a stub. It never writes the real implementation.
+- **Implementation work** (`.agents/skills/implement`) makes the tests
+  pass. It never changes specs, contracts or tests.
 
-- **Spec and test work** writes specs, contracts and tests, from the spec
-  only, never from existing code.
-- **Implementation work** writes code in `src/` (not tests) until the tests
-  pass. It reads specs, contracts and tests but does not change them.
+Both follow `.agents/skills/tdd-contracts`, which holds the full rules for
+what makes a good test.
 
 ## The loop
 
-1. **Pick one requirement** from an `approved` spec.
-2. **Red.** Write one test for it, named with its ID. Run it and **watch it
-   fail**, for the reason you expect (an assertion, not a typo or an import
-   error). A test you have not seen fail proves nothing.
-3. **Green.** Write the least code that makes it pass. Do not add behaviour
-   no test asks for.
-4. **Refactor.** Improve names and structure while every test stays green.
-   Change the implementation, not the interface.
-5. Run `pnpm check`. Repeat from 1.
+1. **Small module spec.** A human approves a module spec of a handful of
+   requirements, together with its contracts.
+2. **Tracer bullet.** A new feature starts with one E2E happy-path test
+   from its product spec.
+3. **All tests, then lock.** Every test for the module spec is written,
+   named with its requirement ID, against a stub that throws
+   `NotImplemented`. Each must fail for an acceptable reason: an assertion
+   or `NotImplemented`, never a missing module or a type error.
+4. **Green, one requirement at a time,** in ID order, with a commit after
+   each. Minimal code, correct for every valid input, not just the test's.
+5. **Refactor in review,** not in the loop.
 
 ## Hard rules
 
-- **Expected values come from the spec**, never from running the code and
-  copying the output.
-- **Never weaken a test to make it pass:** no loosening an assertion, no
-  `skip`, `only`, `todo` or deleted test, no catching the error the test
-  expects.
-- **Never edit a locked file** (specs, contracts, tests) during
-  implementation work. If one looks wrong, stop and raise a change request:
-  what is wrong, which requirement, and the change you propose.
-- **Ambiguous spec? Do not guess.** Add the question to the spec's "Open
-  questions", leave it `draft`, and stop. A human answers.
-- **"It's too simple to test" is not a reason.** Neither is "I'll add the
-  test after". If it is worth writing, it has a requirement and a test.
+- Expected values come from the spec, never from running the code.
+- Never weaken a test to make it pass: no loosened assertion, no `skip`,
+  `only` or deleted test.
+- Locked files (`AGENTS.md`, "Locked paths") change only through a change
+  request.
+- An unclear spec gets `NEEDS_CLARIFICATION` and an open question. Nobody
+  guesses.
+- A bug fix starts with a failing test that reproduces it.
+- Three failed attempts at the same step: stop and escalate to a human.
+
+## Checked by tools, not trust
+
+Coming in the CI step: a RED check against the stub, a CI check that
+implementation changes do not touch locked paths, a lint ban on
+`.only`/`.skip`, a required clean typecheck, and nightly mutation testing.

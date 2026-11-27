@@ -14,6 +14,8 @@ specs/modules/       one module's interface -> unit + property tests (locked, li
 tests/e2e/           Playwright tests (locked)
 docs/GLOSSARY.md     the words we use, and the ones we don't
 docs/rules/          typescript.md, tdd.md, testing.md
+.agents/skills/      write-specs, implement, tdd-contracts, codebase-design
+LICENSES/            notices for adapted third-party text
 ```
 
 pnpm workspaces + Turborepo, ESM, Node 26 (`.nvmrc`). TypeScript runs
@@ -31,10 +33,16 @@ pnpm dev         # run apps in watch mode
 
 ## How work flows
 
-1. A **spec** says what must be true (`specs/`). A human approves it.
-2. **Tests** are written from the spec, each named with a requirement ID.
-3. **Implementation** makes them pass, one requirement at a time
-   (`docs/rules/tdd.md`).
+1. A **spec** says what must be true (`specs/`). A human approves it with
+   its contracts.
+2. **Tests** are written from the spec, each named with a requirement ID,
+   and locked. Skill: `write-specs`.
+3. **Implementation** makes them pass, one requirement at a time. Skill:
+   `implement`.
+4. **Review** checks the work and does any refactoring.
+
+Both sides follow `tdd-contracts`. For module and interface design, use
+`codebase-design`. The short version is `docs/rules/tdd.md`.
 
 ## Locked paths
 

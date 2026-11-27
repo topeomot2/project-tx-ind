@@ -1,1 +1,5 @@
 pnpm-lock.yaml
+
+# Third-party text kept byte-for-byte as published.
+.agents/skills/codebase-design/
+LICENSES/*.txt
