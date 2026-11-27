@@ -6,7 +6,8 @@ import { hashPassword, verifyPassword } from "./password.ts";
 const password = fc.string({ unit: "binary", minLength: 1, maxLength: 128 });
 
 // Hashing is slow on purpose (about 32 MiB of work each), so few runs.
-const slow = { numRuns: 10 };
+// includeErrorInReport puts the cause (e.g. NotImplemented) in the message.
+const slow = { numRuns: 10, includeErrorInReport: true };
 
 describe("password hashing properties", () => {
   it("PWD-5: every password verifies against its own hash", async () => {

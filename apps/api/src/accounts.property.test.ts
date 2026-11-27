@@ -67,7 +67,8 @@ const registerRequest = fc.record({
 });
 
 // Hashing is slow on purpose, so few runs.
-const slow = { numRuns: 10 };
+// includeErrorInReport puts the cause (e.g. NotImplemented) in the message.
+const slow = { numRuns: 10, includeErrorInReport: true };
 
 describe("accounts properties", () => {
   it("ACC-12: whoever registers can log in, with the email in upper case", async () => {
