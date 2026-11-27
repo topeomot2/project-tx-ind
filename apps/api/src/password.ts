@@ -71,11 +71,19 @@ export async function verifyPassword(
   }
   const expected = Buffer.from(key, "base64");
   const settings = { N: Number(N), r: Number(r), p: Number(p) };
-  const actual = await derive(
-    password,
-    Buffer.from(salt, "base64"),
-    settings,
-    expected.length,
-  );
-  return timingSafeEqual(actual, expected);
+  if (expected.length === 0) {
+    return false;
+  }
+  try {
+    const actual = await derive(
+      password,
+      Buffer.from(salt, "base64"),
+      settings,
+      expected.length,
+    );
+    return timingSafeEqual(actual, expected);
+  } catch {
+    // Settings scrypt refuses: not a hash hashPassword made.
+    return false;
+  }
 }
