@@ -36,8 +36,6 @@ export function createPostgresAccountStore(url: string): PostgresAccountStore {
     onnotice: () => undefined,
   });
 
-  const notImplemented = () => Promise.reject(new Error("NotImplemented"));
-
   return {
     async migrate() {
       await sql`
@@ -73,6 +71,17 @@ export function createPostgresAccountStore(url: string): PostgresAccountStore {
       const [row] = await sql<Row[]>`select * from users where id = ${id}`;
       return row && toStoredUser(row);
     },
-    setPasswordHash: notImplemented,
+    async setPasswordHash(userId, passwordHash) {
+      const [row] = await sql<Row[]>`
+        update users
+        set password_hash = ${passwordHash}, token_version = token_version + 1
+        where id = ${userId}
+        returning *
+      `;
+      if (row === undefined) {
+        throw new Error(`No user ${userId}`);
+      }
+      return toStoredUser(row);
+    },
   };
 }
