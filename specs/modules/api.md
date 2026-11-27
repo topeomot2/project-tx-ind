@@ -19,11 +19,11 @@ Everything a caller must know to use this module. Tests use only this.
 
 ### Exports
 
-| Export      | Kind     | Summary                                                        |
-| ----------- | -------- | -------------------------------------------------------------- |
-| `createApp` | function | `createApp({ db, accounts })`: the Hono app, not yet listening |
-| `Db`        | type     | What the app needs from its database (the seam)                |
-| `parseEnv`  | function | Reads `PORT` and `DATABASE_URL`; throws if invalid             |
+| Export      | Kind     | Summary                                                          |
+| ----------- | -------- | ---------------------------------------------------------------- |
+| `createApp` | function | `createApp({ db, accounts })`: the Hono app, not yet listening   |
+| `Db`        | type     | What the app needs from its database (the seam)                  |
+| `parseEnv`  | function | Reads `PORT`, `DATABASE_URL` and `JWT_SECRET`; throws if invalid |
 
 ### Error modes
 
@@ -49,6 +49,12 @@ tests for that spec.
 
 Both are read by `server.ts` through `parseEnv`, never by `createApp`.
 `server.ts` also runs the account store's `migrate()` before it listens.
+
+- `JWT_SECRET`: the key that signs tokens, at least 32 characters.
+  Required, no default: the server does not start without it.
+
+`parseEnv` examples below (API-7 to API-9) set a valid `JWT_SECRET`
+unless they say otherwise, and it appears in the result.
 
 ## Examples
 
@@ -97,6 +103,11 @@ Both are read by `server.ts` through `parseEnv`, never by `createApp`.
 
 - **Input:** `PORT` of `"zero"` or `"0"`, or a `DATABASE_URL` that is not a URL
 - **Expected:** throws
+
+### API-10: parseEnv requires a JWT_SECRET of at least 32 characters
+
+- **Input:** no `JWT_SECRET`; a 31-character one; a 32-character one
+- **Expected:** throws; throws; returns it as `JWT_SECRET`
 
 ## Invariants
 

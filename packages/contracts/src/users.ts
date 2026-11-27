@@ -46,8 +46,8 @@ export type LogInRequest = z.infer<typeof LogInRequestSchema>;
 
 /** Body of a successful POST /sessions. */
 export const SessionSchema = z.strictObject({
-  /** Opaque bearer token: send as `Authorization: Bearer <token>`. */
-  token: z.string().min(32),
+  /** A signed JWT: send as `Authorization: Bearer <token>`. */
+  token: z.jwt(),
   /** When the token stops working, as an ISO 8601 UTC time. */
   expiresAt: z.iso.datetime(),
 });

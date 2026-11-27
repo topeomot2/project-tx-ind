@@ -47,8 +47,9 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
   as a password hash) makes it invalid.
 - `LogInRequest` is `{ email, password }`; `password` is 1 to 128
   characters, so a password set under older rules can still log in.
-- `Session` is `{ token, expiresAt }`: `token` is an opaque string of at
-  least 32 characters; `expiresAt` is an ISO 8601 UTC time. Strict.
+- `Session` is `{ token, expiresAt }`: `token` is a JWT (three base64url
+  parts joined by dots, with a JSON header); `expiresAt` is an ISO 8601
+  UTC time. Strict.
 - `ChangePasswordRequest` is `{ currentPassword, newPassword }`:
   `currentPassword` is 1 to 128 characters; `newPassword` follows the
   password rules.
@@ -98,10 +99,10 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 - **Input:** password `"short"`; password `""`
 - **Expected:** valid; invalid
 
-### UCON-7: Session needs a long token and an ISO time
+### UCON-7: Session needs a JWT and an ISO time
 
-- **Input:** `{ token: <32 characters>, expiresAt: "2026-11-28T12:00:00.000Z" }`;
-  the same with a 31-character token; the same with `expiresAt: "tomorrow"`
+- **Input:** `{ token: <a JWT>, expiresAt: "2026-11-28T12:00:00.000Z" }`;
+  the same with `token: "not-a-jwt"`; the same with `expiresAt: "tomorrow"`
 - **Expected:** valid; invalid; invalid
 
 ### UCON-8: ChangePasswordRequest applies the password rules to the new password only

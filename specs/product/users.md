@@ -17,8 +17,9 @@ contracts:
 ## Why
 
 People need an account on the api: they register with a name, an email
-and a password, log in to get a session token, and change their password. Later
-endpoints use the token to know who is calling.
+and a password, log in to get a signed token (a JWT), and change their password. Later
+endpoints use the token, sent as `Authorization: Bearer <token>`, to know
+who is calling.
 
 ## Requirements
 
@@ -53,8 +54,9 @@ endpoints use the token to know who is calling.
 - **Given** `ada@example.com` registered with `correct horse battery`
 - **When** a caller sends `POST /sessions` with a `LogInRequest` body
   `{ email: "ada@example.com", password: "correct horse battery" }`
-- **Then** it gets status `200` and a `Session` body with a `token` and an
-  `expiresAt` 24 hours later
+- **Then** it gets status `200` and a `Session` body with a `token` (a JWT)
+  and an `expiresAt` 24 hours later, and the token works on
+  `PUT /users/me/password`
 
 ### USER-5: Logging in with wrong credentials does not say which part was wrong
 
@@ -70,7 +72,7 @@ endpoints use the token to know who is calling.
 - **When** a caller sends `PUT /users/me/password` with
   `Authorization: Bearer T` and a `ChangePasswordRequest` body
   `{ currentPassword: "correct horse battery", newPassword: "tr0ub4dor & 3 more" }`
-- **Then** it gets status `204`; after that, logging in with the new
+- **Then** it gets status `200` and a new `Session` body; after that, logging in with the new
   password succeeds and logging in with the old one fails with
   `invalid_credentials`
 
@@ -86,16 +88,18 @@ endpoints use the token to know who is calling.
 
 - **Given** the api is running
 - **When** a caller sends `PUT /users/me/password` with no `Authorization`
-  header, or with a token the api never issued
+  header, with a value that is not a JWT, with a JWT the api did not
+  sign (wrong signature), or with an expired JWT
 - **Then** it gets status `401` and an `ApiError` with
   `code: "unauthenticated"`
 
-### USER-9: Changing the password ends the user's other sessions
+### USER-9: Changing the password ends every older token
 
 - **Given** `ada@example.com` is logged in twice, with tokens `T1` and `T2`
-- **When** the user changes the password using `T1`
-- **Then** `T1` still works, and changing the password with `T2` gets
-  `401` and `code: "unauthenticated"`
+- **When** the user changes the password using `T1`, and gets a new token
+  `T3` in the response
+- **Then** changing the password with `T1` or `T2` gets `401` and
+  `code: "unauthenticated"`, and `T3` works
 
 ### USER-10: The new password must follow the password rules
 
@@ -115,15 +119,23 @@ endpoints use the token to know who is calling.
 
 ## Open questions
 
-Defaults below are what the requirements above assume. Each needs a yes or
-a different answer before this spec is approved.
+Answered:
 
-- NEEDS_CLARIFICATION (auth style): an opaque bearer token, stored hashed
-  in Postgres so it can be revoked (assumed), or a signed JWT (no server
-  state, cannot be revoked before it expires), or a cookie session?
-- NEEDS_CLARIFICATION (token lifetime): 24 hours, no refresh (assumed)?
-- NEEDS_CLARIFICATION (password rules): 12 to 128 characters, any
-  characters, no composition rules, as NIST SP 800-63B suggests (assumed)?
+- Auth style: a signed JWT (HS256), sent as a bearer token. The api keeps
+  no session table. Each user has a token version; a password change
+  bumps it, which ends every older token (USER-9).
+- Token lifetime: 24 hours, no refresh.
+
+Still open (the requirements above assume the default):
+
+- NEEDS_CLARIFICATION (password length): 12 to 128 characters (current
+  draft), or 15 to 128 as NIST SP 800-63B-4 asks when a password is the
+  only factor (recommended)? Either way any characters, no composition
+  rules.
+- NEEDS_CLARIFICATION (password characters): normalize passwords with
+  Unicode NFKC before hashing, so the same password typed on different
+  devices matches, and count length in characters (code points), not
+  UTF-16 units (recommended)?
 - NEEDS_CLARIFICATION (email): compared without case and stored
   lowercased (assumed); no verification email for now?
 - NEEDS_CLARIFICATION (enumeration on register): `409 email_taken` does
@@ -135,6 +147,3 @@ a different answer before this spec is approved.
 - NEEDS_CLARIFICATION (name): one display name field, required, 1 to 100
   characters after trimming outer spaces, any characters, not unique, and
   returned in every `User` (assumed)? Or separate first and last names?
-- NEEDS_CLARIFICATION (other sessions): a password change ends every
-  other session of the user and keeps the one that made the change
-  (assumed, USER-9), or ends all of them, or none?
