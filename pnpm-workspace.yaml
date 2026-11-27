@@ -1,0 +1,27 @@
+# Every folder that holds a workspace package.
+packages:
+  - apps/*
+  - packages/*
+  - tests/*
+
+# One version of each shared tool for the whole repo.
+# Packages ask for it with "catalog:" instead of a version range.
+catalog:
+  "@eslint/js": 10.0.1
+  "@types/node": 26.6.11
+  eslint: 10.15.0
+  eslint-config-prettier: 10.1.8
+  globals: 17.14.0
+  prettier: 3.10.1
+  turbo: 2.11.13
+  typescript: 6.0.3
+  typescript-eslint: 8.74.0
+  vitest: 5.1.2
+
+# Fail the install if the Node version does not match "engines".
+engineStrict: true
+
+# Supply-chain guard: never install a version published less than
+# 1 day (1440 minutes) ago. Most malicious releases are caught within hours.
+minimumReleaseAge: 1440
+minimumReleaseAgeStrict: true
