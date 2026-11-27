@@ -1,9 +1,11 @@
 import type { ApiError, Health } from "@repo/contracts";
 import { Hono } from "hono";
+import type { Accounts } from "./accounts.ts";
 import type { Db } from "./db.ts";
 
 export interface AppDeps {
   db: Db;
+  accounts: Accounts;
 }
 
 /**
@@ -11,7 +13,8 @@ export interface AppDeps {
  * `app.request()` directly and the entry point (server.ts) stays tiny.
  * Dependencies come in as parameters, so tests can pass fakes.
  */
-export function createApp({ db }: AppDeps): Hono {
+export function createApp({ db, accounts }: AppDeps): Hono {
+  void accounts; // Stub: the user routes follow specs/product/users.md.
   const app = new Hono();
   const healthy: Health = { status: "ok", app: "api" };
 

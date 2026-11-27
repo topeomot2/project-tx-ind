@@ -88,8 +88,8 @@ who is calling.
 
 - **Given** the api is running
 - **When** a caller sends `PUT /users/me/password` with no `Authorization`
-  header, with a value that is not a JWT, with a JWT the api did not
-  sign (wrong signature), or with an expired JWT
+  header, with a value that is not a JWT, or with a JWT the api did not
+  sign (wrong signature)
 - **Then** it gets status `401` and an `ApiError` with
   `code: "unauthenticated"`
 
@@ -108,6 +108,10 @@ who is calling.
   15 characters
 - **Then** it gets status `400` and an `ApiError` with
   `code: "validation_failed"`, and the old password still logs in
+
+Expired tokens are rejected too; that is checked in
+`specs/modules/accounts.md` (ACC-6, ACC-9), because an E2E test cannot wait
+24 hours.
 
 ## Out of scope
 

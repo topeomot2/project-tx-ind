@@ -7,7 +7,13 @@ const services = await startServices();
 
 const playwright = spawn("playwright", ["test", ...process.argv.slice(2)], {
   stdio: "inherit",
-  env: { ...process.env, DATABASE_URL: services.databaseUrl },
+  env: {
+    ...process.env,
+    DATABASE_URL: services.databaseUrl,
+    // Test-only signing key; the api needs one to start (API-10).
+    JWT_SECRET:
+      process.env["JWT_SECRET"] ?? "e2e-only-secret-not-for-production-use",
+  },
 });
 
 const exitCode = await new Promise<number>((resolve) => {
