@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
 const isCI = Boolean(process.env["CI"]);
+const apiURL = process.env["E2E_API_URL"] ?? "http://localhost:3000";
 
 /**
  * End-to-end tests: the product spec, checked against the running system.
@@ -14,10 +15,17 @@ export default defineConfig({
   retries: isCI ? 2 : 0,
   reporter: isCI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
-    baseURL: process.env["E2E_BASE_URL"] ?? "http://localhost:3000",
+    baseURL: apiURL,
     trace: "on-first-retry",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  // Apps that must be running are started here once they exist, e.g.
-  // webServer: [{ command: "pnpm --filter <app> start", url: "..." }],
+  // Start every app the tests need. Locally an already-running dev server
+  // is reused; in CI each run starts fresh.
+  webServer: [
+    {
+      command: "pnpm --filter @repo/api start",
+      url: `${apiURL}/health`,
+      reuseExistingServer: !isCI,
+    },
+  ],
 });

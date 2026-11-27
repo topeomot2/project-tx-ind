@@ -1,0 +1,11 @@
+import { HealthSchema } from "@repo/contracts";
+import { expect, test } from "@playwright/test";
+
+test("the api reports healthy", async ({ request }) => {
+  const response = await request.get("/health");
+
+  expect(response.status()).toBe(200);
+  expect(HealthSchema.parse(await response.json())).toMatchObject({
+    service: "api",
+  });
+});

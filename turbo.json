@@ -18,6 +18,10 @@
     "test:e2e": {
       "dependsOn": ["transit"],
       "cache": false
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
