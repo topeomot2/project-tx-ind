@@ -8,7 +8,8 @@
     "./tsconfig/js.json": "./tsconfig/js.json",
     "./eslint": "./src/eslint.js",
     "./prettier": "./src/prettier.js",
-    "./vitest": "./src/vitest.ts"
+    "./vitest": "./src/vitest.ts",
+    "./stryker": "./src/stryker.js"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
@@ -16,7 +17,9 @@
   },
   "dependencies": {
     "@eslint/js": "catalog:",
+    "@vitest/eslint-plugin": "catalog:",
     "eslint-config-prettier": "catalog:",
+    "eslint-plugin-playwright": "catalog:",
     "globals": "catalog:",
     "typescript-eslint": "catalog:"
   },
@@ -24,6 +27,7 @@
     "eslint": "catalog:"
   },
   "devDependencies": {
+    "@stryker-mutator/api": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "typescript": "catalog:",

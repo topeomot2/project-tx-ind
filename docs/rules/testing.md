@@ -62,6 +62,7 @@ inner loop.
 pnpm check                                # typecheck, lint, unit + property tests
 pnpm test:integration                     # integration (needs Docker)
 pnpm test:e2e                             # E2E (needs Docker)
+pnpm test:mutation                        # Stryker (slow; report in reports/mutation/)
 pnpm --filter @repo/contracts test        # one package
 pnpm --filter @repo/api exec vitest       # watch mode
 ```

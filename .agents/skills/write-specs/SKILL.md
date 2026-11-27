@@ -18,6 +18,9 @@ real implementation. Read `tdd-contracts` first; its rules apply here.
 
 ## Steps
 
+Work on a `spec/<topic>` branch. Only spec branches may change locked
+paths, and their pull requests need a human review.
+
 1. **Spec.** Copy a template from `specs/_templates/`. Keep a module spec
    small: a handful of requirements. Give every requirement an ID. Leave
    `status: draft`.

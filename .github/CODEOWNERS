@@ -1,0 +1,32 @@
+# Changes to these paths need the owner's approval before they merge
+# (turn on "Require review from Code Owners" in branch protection).
+# Keep in sync with "locked" in factory.json.
+
+# Hard lock: what the product must do
+/specs/product/        @topeomot2
+/packages/contracts/   @topeomot2
+/tests/e2e/            @topeomot2
+
+# Light lock: module specs and the tests they drive
+/specs/modules/        @topeomot2
+*.test.ts              @topeomot2
+*.test.js              @topeomot2
+
+# The rules and the checks that enforce them
+/AGENTS.md             @topeomot2
+/docs/                 @topeomot2
+/.agents/              @topeomot2
+/.github/              @topeomot2
+/packages/checks/      @topeomot2
+/factory.json          @topeomot2
+/packages/config/      @topeomot2
+
+# Settings that decide what gets checked
+/package.json          @topeomot2
+/pnpm-workspace.yaml   @topeomot2
+/turbo.json            @topeomot2
+tsconfig.json          @topeomot2
+eslint.config.js       @topeomot2
+vitest*.config.ts      @topeomot2
+stryker.config.js      @topeomot2
+playwright.config.ts   @topeomot2

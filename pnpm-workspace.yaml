@@ -10,9 +10,14 @@ catalog:
   "@eslint/js": 10.0.1
   "@hono/node-server": 2.1.11
   "@playwright/test": 1.65.1
+  "@stryker-mutator/api": 10.1.1
+  "@stryker-mutator/core": 10.1.1
+  "@stryker-mutator/vitest-runner": 10.1.1
   "@types/node": 26.6.11
+  "@vitest/eslint-plugin": 1.6.28
   eslint: 10.15.0
   eslint-config-prettier: 10.1.8
+  eslint-plugin-playwright: 2.12.2
   fast-check: 4.11.0
   globals: 17.14.0
   postgres: 4.1.1
@@ -39,3 +44,10 @@ allowBuilds:
   cpu-features: false
   protobufjs: false
   ssh2: false
+
+# Stryker loads TypeScript at runtime without declaring it, which pnpm's
+# strict layout does not allow. Declare it so the repo's version is used.
+packageExtensions:
+  "@stryker-mutator/core":
+    peerDependencies:
+      typescript: "*"

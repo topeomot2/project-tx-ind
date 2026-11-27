@@ -16,7 +16,26 @@
     }
   ],
   "locked": {
-    "hard": ["specs/product/**", "packages/contracts/**", "tests/e2e/**"],
+    "hard": [
+      "specs/product/**",
+      "packages/contracts/**",
+      "tests/e2e/**",
+      "AGENTS.md",
+      "docs/**",
+      ".agents/**",
+      ".github/**",
+      "factory.json",
+      "packages/checks/**",
+      "packages/config/**",
+      "package.json",
+      "pnpm-workspace.yaml",
+      "turbo.json",
+      "**/tsconfig.json",
+      "**/eslint.config.js",
+      "**/vitest*.config.ts",
+      "**/stryker.config.js",
+      "**/playwright.config.ts"
+    ],
     "light": [
       "specs/modules/**",
       "**/*.test.ts",

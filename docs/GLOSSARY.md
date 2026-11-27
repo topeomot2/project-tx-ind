@@ -188,6 +188,15 @@ From Matt Pocock's `codebase-design` skill (MIT).
   lock**: a reviewer approves a proposed change.
 - **Avoid:** frozen, read-only, protected.
 
+### Mutation testing
+
+- **Is:** checking that tests catch bugs by planting small bugs
+  (**mutants**) in the code and seeing whether any test fails. A mutant no
+  test catches has **survived**. The **mutation score** is the share
+  caught. Tool: Stryker.
+- **Not:** coverage, which only says a line ran.
+- **Lives:** `stryker.config.js` per package; `pnpm test:mutation`.
+
 ### Change request
 
 - **Is:** how implementation work asks for a change to a locked file: it

@@ -24,6 +24,9 @@ which requirement, what is wrong, and the change you propose.
 
 ## Steps
 
+Work on an `impl/<topic>` branch. CI fails the pull request if it changes
+a locked path (`pnpm check:locks`).
+
 1. Run the tests and confirm they fail with an acceptable RED.
 2. Take the lowest requirement ID still failing.
 3. Write the **least code** that makes its test pass, but correct for

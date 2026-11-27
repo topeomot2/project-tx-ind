@@ -38,6 +38,13 @@ what makes a good test.
 
 ## Checked by tools, not trust
 
-Coming in the CI step: a RED check against the stub, a CI check that
-implementation changes do not touch locked paths, a lint ban on
-`.only`/`.skip`, a required clean typecheck, and nightly mutation testing.
+| Rule                                       | Enforced by                                          |
+| ------------------------------------------ | ---------------------------------------------------- |
+| New tests fail for the right reason first  | `pnpm check:red` on `spec/` pull requests            |
+| Implementation does not touch locked paths | `pnpm check:locks` + `.github/CODEOWNERS`            |
+| No `.only`, `.skip` or `.todo`             | ESLint, in `pnpm check`                              |
+| Types are clean                            | `tsc --noEmit`, in `pnpm check`                      |
+| Every requirement has a test, and back     | `pnpm check:spec-ids`                                |
+| Tests catch real bugs                      | Stryker, nightly (`pnpm test:mutation`), report-only |
+
+All run in `.github/workflows/`.

@@ -10,13 +10,16 @@
   "scripts": {
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:mutation": "stryker run"
   },
   "dependencies": {
     "zod": "catalog:"
   },
   "devDependencies": {
     "@repo/config": "workspace:*",
+    "@stryker-mutator/core": "catalog:",
+    "@stryker-mutator/vitest-runner": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "fast-check": "catalog:",

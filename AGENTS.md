@@ -34,6 +34,10 @@ pnpm check              # typecheck + lint + unit/property tests, all packages
 pnpm test:integration   # adapters against real services (needs Docker)
 pnpm test:e2e           # starts services and apps, runs E2E tests (needs Docker)
 pnpm services:up        # Postgres for local dev (pnpm services:down to stop)
+pnpm check:spec-ids     # every approved requirement has a test, and back
+pnpm check:locks        # this branch only changes what its kind of work may
+pnpm check:red          # on spec/ branches: new tests fail for the right reason
+pnpm test:mutation      # Stryker mutation testing (slow; nightly in CI)
 pnpm format             # Prettier
 pnpm dev                # run apps in watch mode
 ```
@@ -51,23 +55,32 @@ pnpm dev                # run apps in watch mode
 Both sides follow `tdd-contracts`. For module and interface design, use
 `codebase-design`. The short version is `docs/rules/tdd.md`.
 
+## Branches
+
+- `spec/<topic>`: spec and test work (specs, contracts, tests, stubs).
+- `impl/<topic>`: implementation work. Any other branch name counts as
+  implementation work.
+
 ## Locked paths
 
-Implementation work reads these but never edits them:
+Implementation work reads these but never edits them. The full list is
+`locked` in `factory.json`; in short:
 
-- `specs/**`
-- `packages/contracts/**`
-- `tests/e2e/**`
-- `**/*.test.ts`, `**/*.property.test.ts`, `**/*.integration.test.ts`
+- specs, contracts and every test file
+- the rules: `AGENTS.md`, `docs/`, `.agents/`
+- the checks and their settings: `.github/`, `packages/checks/`,
+  `packages/config/`, root `package.json`, `pnpm-workspace.yaml`,
+  `turbo.json`, and every `tsconfig.json`, `eslint.config.js`,
+  `vitest*.config.ts`, `stryker.config.js`, `playwright.config.ts`
 
-The same list is in `factory.json` under `locked`.
-
-If one is wrong, stop and raise a change request. See `docs/rules/tdd.md`.
+CI enforces this on every pull request (`pnpm check:locks`), and
+`.github/CODEOWNERS` makes a human review these paths. If one is wrong,
+stop and raise a change request. See `docs/rules/tdd.md`.
 
 ## Done means
 
-- `pnpm check`, `pnpm test:integration` and `pnpm test:e2e` pass, and
-  `pnpm format:check` is clean.
+- `pnpm check`, `pnpm test:integration`, `pnpm test:e2e` and
+  `pnpm check:spec-ids` pass, and `pnpm format:check` is clean.
 - Every requirement you worked on has a test with its ID.
 - No new `any`, casts, `skip`/`only`, or lint suppressions without a reason.
 - Words match `docs/GLOSSARY.md`.

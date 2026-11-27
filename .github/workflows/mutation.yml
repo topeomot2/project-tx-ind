@@ -1,0 +1,33 @@
+name: Mutation testing
+
+# Nightly at 07:00 UTC, or by hand from the Actions tab. Report-only:
+# a low score never fails the run. Read the report in the run's artifacts.
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    name: Stryker
+    runs-on: ubuntu-latest
+    env:
+      CI: true
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test:mutation
+      - if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mutation-reports
+          path: "**/reports/mutation/"
+          retention-days: 30
