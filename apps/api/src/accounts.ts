@@ -5,6 +5,7 @@ import type {
   Session,
   User,
 } from "@repo/contracts";
+import { hashPassword } from "./password.ts";
 
 /** The outcome of an operation that can fail in an expected way. */
 export type Result<T, E extends string> =
@@ -53,13 +54,28 @@ export interface AccountsDeps {
   jwtSecret: string;
 }
 
-/** Stub: the implementation follows specs/modules/accounts.md. */
-export const createAccounts: (deps: AccountsDeps) => Accounts = () => {
+/** Accounts over a store. See specs/modules/accounts.md. */
+export function createAccounts({ store }: AccountsDeps): Accounts {
   const notImplemented = () => Promise.reject(new Error("NotImplemented"));
   return {
-    register: notImplemented,
+    async register({ name, email, password }) {
+      const stored = await store.insertUser({
+        name,
+        email: email.toLowerCase(),
+        passwordHash: await hashPassword(password),
+      });
+      if (stored === "email_taken") {
+        return { ok: false, code: "email_taken" };
+      }
+      return { ok: true, value: toUser(stored) };
+    },
     logIn: notImplemented,
     authenticate: notImplemented,
     changePassword: notImplemented,
   };
-};
+}
+
+/** A stored user as callers see one: never the hash. */
+function toUser({ id, name, email }: StoredUser): User {
+  return { id, name, email };
+}
