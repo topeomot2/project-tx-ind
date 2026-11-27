@@ -9,8 +9,9 @@ export interface PostgresAccountStore extends AccountStore {
 }
 
 /** Stub: the implementation follows specs/modules/account-store.md. */
-export function createPostgresAccountStore(url: string): PostgresAccountStore {
-  void url;
+export const createPostgresAccountStore: (
+  url: string,
+) => PostgresAccountStore = () => {
   const notImplemented = () => Promise.reject(new Error("NotImplemented"));
   return {
     migrate: notImplemented,
@@ -20,4 +21,4 @@ export function createPostgresAccountStore(url: string): PostgresAccountStore {
     findUserById: notImplemented,
     setPasswordHash: notImplemented,
   };
-}
+};

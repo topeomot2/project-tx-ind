@@ -4,7 +4,7 @@ import { z } from "zod";
 export const EmailSchema = z.email().max(254);
 
 /** Number of Unicode code points, so an emoji counts as one character. */
-const codePoints = (text: string): number => [...text].length;
+const codePoints = (text: string): number => Array.from(text).length;
 
 /**
  * A password that follows the password rules: 15 to 128 characters,
@@ -13,7 +13,7 @@ const codePoints = (text: string): number => [...text].length;
 export const PasswordSchema = z
   .string()
   .refine((text) => codePoints(text) >= 15 && codePoints(text) <= 128, {
-    message: "A password has 15 to 128 characters.",
+    error: "A password has 15 to 128 characters.",
   });
 
 /**

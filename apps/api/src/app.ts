@@ -13,8 +13,8 @@ export interface AppDeps {
  * `app.request()` directly and the entry point (server.ts) stays tiny.
  * Dependencies come in as parameters, so tests can pass fakes.
  */
-export function createApp({ db, accounts }: AppDeps): Hono {
-  void accounts; // Stub: the user routes follow specs/product/users.md.
+export function createApp({ db }: AppDeps): Hono {
+  // Stub: the user routes (using deps.accounts) follow specs/product/users.md.
   const app = new Hono();
   const healthy: Health = { status: "ok", app: "api" };
 

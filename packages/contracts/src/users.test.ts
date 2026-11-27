@@ -50,8 +50,9 @@ describe("RegisterRequestSchema", () => {
   it.each(["name", "email", "password"] as const)(
     "UCON-4: rejects a body without %s",
     (field) => {
-      const body: Record<string, string> = { ...register };
-      delete body[field];
+      const body = Object.fromEntries(
+        Object.entries(register).filter(([key]) => key !== field),
+      );
 
       expect(RegisterRequestSchema.safeParse(body).success).toBe(false);
     },

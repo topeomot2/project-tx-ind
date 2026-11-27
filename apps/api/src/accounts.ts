@@ -54,8 +54,7 @@ export interface AccountsDeps {
 }
 
 /** Stub: the implementation follows specs/modules/accounts.md. */
-export function createAccounts(deps: AccountsDeps): Accounts {
-  void deps;
+export const createAccounts: (deps: AccountsDeps) => Accounts = () => {
   const notImplemented = () => Promise.reject(new Error("NotImplemented"));
   return {
     register: notImplemented,
@@ -63,4 +62,4 @@ export function createAccounts(deps: AccountsDeps): Accounts {
     authenticate: notImplemented,
     changePassword: notImplemented,
   };
-}
+};
