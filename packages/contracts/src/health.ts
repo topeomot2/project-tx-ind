@@ -4,7 +4,7 @@ import { z } from "zod";
 export const HealthSchema = z.object({
   status: z.literal("ok"),
   /** Name of the app that answered, e.g. "api". */
-  service: z.string().min(1),
+  app: z.string().min(1),
 });
 
 export type Health = z.infer<typeof HealthSchema>;

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /**
- * The one error shape every app returns across a boundary
+ * The one error shape every app returns at its interface
  * (HTTP response body, queue message, worker result).
  */
 export const ApiErrorSchema = z.object({

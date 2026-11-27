@@ -13,7 +13,11 @@ Where it lives: `packages/contracts`
 The shared shapes apps exchange, each as a Zod schema with its type derived
 by `z.infer`. Shapes only: no business logic, no I/O.
 
-## Public surface
+## Interface
+
+Everything a caller must know to use this module. Tests use only this.
+
+### Exports
 
 | Export           | Kind   | Summary                              |
 | ---------------- | ------ | ------------------------------------ |
@@ -28,6 +32,17 @@ by `z.infer`. Shapes only: no business logic, no I/O.
   Stable; callers branch on it.
 - `message`: non-empty text for humans. May change; never branch on it.
 - `details` (optional): an object of extra, structured information.
+
+### Error modes
+
+| Situation                | Result                              |
+| ------------------------ | ----------------------------------- |
+| `parse` on bad input     | throws a `ZodError`                 |
+| `safeParse` on bad input | returns `{ success: false, error }` |
+
+### Configuration
+
+- None.
 
 ## Examples
 
@@ -52,15 +67,14 @@ by `z.infer`. Shapes only: no business logic, no I/O.
 - **Input:** `{ code: "oops", message: "" }`
 - **Expected:** invalid
 
-### CON-5: Health accepts an ok status with a service name
+### CON-5: Health accepts an ok status with an app name
 
-- **Input:** `{ status: "ok", service: "api" }`
+- **Input:** `{ status: "ok", app: "api" }`
 - **Expected:** valid
 
 ### CON-6: Health rejects anything else
 
-- **Input:** `status` other than `"ok"`, an empty `service`, or a missing
-  `service`
+- **Input:** `status` other than `"ok"`, an empty `app`, or a missing `app`
 - **Expected:** invalid
 
 ## Invariants
@@ -70,7 +84,7 @@ by `z.infer`. Shapes only: no business logic, no I/O.
 For every value with a valid `code`, a non-empty `message` and optional
 JSON `details`, parsing returns the same data.
 
-### CON-8: A valid ApiError survives a JSON boundary
+### CON-8: A valid ApiError survives the wire as JSON
 
 For every valid `ApiError`, the value received after
 `JSON.parse(JSON.stringify(error))` is still accepted, and parsing returns
@@ -80,13 +94,6 @@ what was received.
 
 For every non-empty string that is not lowercase letters, digits and `_`
 starting with a letter, an `ApiError` with that `code` is invalid.
-
-## Errors
-
-| Situation                | Result                              |
-| ------------------------ | ----------------------------------- |
-| `parse` on bad input     | throws a `ZodError`                 |
-| `safeParse` on bad input | returns `{ success: false, error }` |
 
 ## Open questions
 

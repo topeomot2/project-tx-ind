@@ -9,7 +9,7 @@ export function createApp(): Hono {
   const app = new Hono();
 
   app.get("/health", (c) =>
-    c.json({ status: "ok", service: "api" } satisfies Health),
+    c.json({ status: "ok", app: "api" } satisfies Health),
   );
 
   app.notFound((c) =>

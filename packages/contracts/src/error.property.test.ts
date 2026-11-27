@@ -28,7 +28,7 @@ describe("ApiErrorSchema properties", () => {
     );
   });
 
-  it("CON-8: still accepts an error after it crosses a JSON boundary", () => {
+  it("CON-8: still accepts an error after it goes over the wire as JSON", () => {
     // Compare with what arrives, not with the original: JSON changes some
     // values on the way (fast-check found that -0 arrives as 0).
     fc.assert(

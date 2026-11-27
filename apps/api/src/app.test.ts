@@ -9,7 +9,7 @@ describe("api", () => {
     expect(response.status).toBe(200);
     expect(HealthSchema.parse(await response.json())).toEqual({
       status: "ok",
-      service: "api",
+      app: "api",
     });
   });
 

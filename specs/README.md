@@ -5,10 +5,10 @@ Tests are written from specs, never from the implementation.
 
 ## Two levels
 
-| Level   | Folder     | Describes                                 | Drives                                                       | Lock  |
-| ------- | ---------- | ----------------------------------------- | ------------------------------------------------------------ | ----- |
-| Product | `product/` | Behaviour a user or caller can observe    | E2E tests in `tests/e2e`                                     | Hard  |
-| Module  | `modules/` | One module's public surface and its rules | Unit (`*.test.ts`) and property tests (`*.property.test.ts`) | Light |
+| Level   | Folder     | Describes                              | Drives                                                       | Lock  |
+| ------- | ---------- | -------------------------------------- | ------------------------------------------------------------ | ----- |
+| Product | `product/` | Behaviour a user or caller can observe | E2E tests in `tests/e2e`                                     | Hard  |
+| Module  | `modules/` | One module's interface                 | Unit (`*.test.ts`) and property tests (`*.property.test.ts`) | Light |
 
 - **Hard lock:** changes only with human approval.
 - **Light lock:** may change when the design is refactored; the change is

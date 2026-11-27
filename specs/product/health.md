@@ -18,7 +18,7 @@ needs one cheap call that says an app is ready to take traffic.
 - **Given** the api is running
 - **When** a caller sends `GET /health`
 - **Then** it gets status `200` and a `Health` body with `status: "ok"` and
-  `service: "api"`
+  `app: "api"`
 
 ## Out of scope
 

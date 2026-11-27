@@ -5,7 +5,7 @@ const apiURL = process.env["E2E_API_URL"] ?? "http://localhost:3000";
 
 /**
  * End-to-end tests: the product spec, checked against the running system.
- * They talk to apps only through their public surface (HTTP, browser).
+ * They talk to apps only through their interface (HTTP, browser).
  */
 export default defineConfig({
   testDir: "./src",

@@ -6,6 +6,6 @@ test("HEALTH-1: the api reports healthy", async ({ request }) => {
 
   expect(response.status()).toBe(200);
   expect(HealthSchema.parse(await response.json())).toMatchObject({
-    service: "api",
+    app: "api",
   });
 });

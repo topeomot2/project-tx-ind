@@ -13,18 +13,33 @@ Where it lives: `apps/api`
 Builds the HTTP app (`createApp`) separately from starting it
 (`server.ts`), so it can be tested without opening a port.
 
-## Public surface
+## Interface
+
+Everything a caller must know to use this module. Tests use only this.
+
+### Exports
 
 | Export      | Kind     | Summary                                 |
 | ----------- | -------- | --------------------------------------- |
 | `createApp` | function | Returns the Hono app, not yet listening |
+
+### Error modes
+
+| Situation        | Result                                                        |
+| ---------------- | ------------------------------------------------------------- |
+| No route matches | `404`, `code: "not_found"`                                    |
+| A handler throws | `500`, `code: "internal_error"`; cause logged, never returned |
+
+### Configuration
+
+- `PORT` (read by `server.ts`, not `createApp`): port to listen on. Default `3000`.
 
 ## Examples
 
 ### API-1: GET /health returns the Health body
 
 - **Input:** `GET /health`
-- **Expected:** `200`, `{ status: "ok", service: "api" }`
+- **Expected:** `200`, `{ status: "ok", app: "api" }`
 
 ### API-2: An unknown route returns not_found
 
@@ -40,13 +55,6 @@ Builds the HTTP app (`createApp`) separately from starting it
 ## Invariants
 
 - None yet.
-
-## Errors
-
-| Situation        | Result                                                        |
-| ---------------- | ------------------------------------------------------------- |
-| No route matches | `404`, `code: "not_found"`                                    |
-| A handler throws | `500`, `code: "internal_error"`; cause logged, never returned |
 
 ## Open questions
 
