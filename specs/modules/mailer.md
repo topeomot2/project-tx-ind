@@ -57,4 +57,6 @@ Integration tests against Mailpit, started from `compose.yaml`.
 
 ## Open questions
 
-- None.
+- None. Production target (Temitope, 2026-11-28): Amazon SES through its
+  SMTP interface, by setting `SMTP_URL`; no code change. An SES API
+  adapter behind `Mailer` can come later if IAM roles are wanted.
