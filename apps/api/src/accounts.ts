@@ -155,6 +155,9 @@ export function createAccounts({
       if (user === undefined || !matches) {
         return { ok: false, code: "invalid_credentials" };
       }
+      if (!user.emailVerified) {
+        return { ok: false, code: "email_not_verified" };
+      }
       return { ok: true, value: await issueSession(user) };
     },
     async authenticate(token) {
@@ -175,8 +178,13 @@ export function createAccounts({
       );
       return { ok: true, value: await issueSession(updated) };
     },
-    logOut() {
-      throw new Error("NotImplemented");
+    async logOut(token) {
+      const user = await userOf(token);
+      if (user === undefined) {
+        return { ok: false, code: "unauthenticated" };
+      }
+      await store.endSessions(user.id);
+      return { ok: true, value: null };
     },
   };
 }
