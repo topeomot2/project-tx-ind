@@ -39,6 +39,7 @@
     ],
     "light": [
       "specs/modules/**",
+      "**/src/testing/**",
       "**/*.test.ts",
       "**/*.property.test.ts",
       "**/*.integration.test.ts"

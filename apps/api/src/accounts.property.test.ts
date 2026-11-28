@@ -1,52 +1,12 @@
 import { SessionSchema } from "@repo/contracts";
 import fc from "fast-check";
-import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import {
-  createAccounts,
-  type AccountStore,
-  type StoredUser,
-} from "./accounts.ts";
-
-/** In-memory adapter for the AccountStore seam (as in accounts.test.ts). */
-function fakeStore(): AccountStore {
-  const users = new Map<string, StoredUser>();
-  return {
-    insertUser(user) {
-      if ([...users.values()].some((u) => u.email === user.email)) {
-        return Promise.resolve("email_taken");
-      }
-      const stored = { ...user, id: randomUUID(), tokenVersion: 0 };
-      users.set(stored.id, stored);
-      return Promise.resolve({ ...stored });
-    },
-    findUserByEmail(email) {
-      const found = [...users.values()].find((u) => u.email === email);
-      return Promise.resolve(found && { ...found });
-    },
-    findUserById(id) {
-      const found = users.get(id);
-      return Promise.resolve(found && { ...found });
-    },
-    setPasswordHash(userId, passwordHash) {
-      const found = users.get(userId);
-      if (found === undefined) {
-        return Promise.reject(new Error(`No user ${userId}`));
-      }
-      const updated = {
-        ...found,
-        passwordHash,
-        tokenVersion: found.tokenVersion + 1,
-      };
-      users.set(userId, updated);
-      return Promise.resolve({ ...updated });
-    },
-  };
-}
+import { createAccounts } from "./accounts.ts";
+import { fakeAccountStore } from "./testing/fake-account-store.ts";
 
 function setup() {
   return createAccounts({
-    store: fakeStore(),
+    store: fakeAccountStore(),
     now: () => new Date("2026-11-27T12:00:00.000Z"),
     jwtSecret: "test-secret-that-is-at-least-32-characters",
   });
@@ -67,8 +27,7 @@ const registerRequest = fc.record({
 });
 
 // Hashing is slow on purpose, so few runs.
-// includeErrorInReport puts the cause (e.g. NotImplemented) in the message.
-const slow = { numRuns: 10, includeErrorInReport: true };
+const slow = { numRuns: 10 };
 
 describe("accounts properties", () => {
   it("ACC-12: whoever registers can log in, with the email in upper case", async () => {

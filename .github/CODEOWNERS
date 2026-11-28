@@ -11,6 +11,7 @@
 /specs/modules/        @topeomot2
 *.test.ts              @topeomot2
 *.test.js              @topeomot2
+/apps/*/src/testing/   @topeomot2
 
 # The rules and the checks that enforce them
 /AGENTS.md             @topeomot2
