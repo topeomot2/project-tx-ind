@@ -195,6 +195,27 @@ From Matt Pocock's `codebase-design` skill (MIT).
   implementation merged into a stacked spec branch does not break it.
 - **Lives:** `lockingCommit` in `packages/checks`.
 
+### Draft requirement
+
+- **Is:** a requirement whose heading ends in `[draft]`, added to an
+  approved spec. It is not approved until a human removes the marker, so
+  no test may name it yet.
+- **Lives:** `specs/`; read by `approvedIds` in `packages/checks`.
+
+### Safeguard
+
+- **Is:** a rule in a spec's "Safeguards" section that no fast, reliable
+  test can check, with the reason why. Implementation must build it;
+  review checks it by hand.
+- **Not:** a requirement. It has no ID and no test.
+- **Avoid:** untested requirement.
+
+### Stacked PRs
+
+- **Is:** how a feature reaches `main`: the impl PR merges into
+  `spec/<topic>`, then the spec PR (now green) merges into `main`.
+- **Lives:** `AGENTS.md`, "Branches".
+
 ### Mutation testing
 
 - **Is:** checking that tests catch bugs by planting small bugs

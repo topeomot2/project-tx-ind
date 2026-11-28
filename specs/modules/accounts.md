@@ -67,9 +67,6 @@ Rules a caller can rely on:
   stops working, including the one that made the change. The change
   returns a new `Session` instead.
 - The store only ever gets a password hash, never the password.
-- `logIn` does the same hashing work whether or not the email has an
-  account, so response time does not reveal which emails exist. (Not
-  checked by a test: timing tests are not deterministic.)
 
 ### Error modes
 
@@ -171,6 +168,12 @@ hashing is slow.)
 
 For any number of log ins (2 to 5) by one user at the same `now()`, all
 the tokens differ.
+
+## Safeguards
+
+- `logIn` does the same hashing work whether or not the email has an
+  account, so response time does not reveal which emails exist: timing
+  tests are not deterministic.
 
 ## Open questions
 

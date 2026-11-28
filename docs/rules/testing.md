@@ -26,6 +26,11 @@ inner loop.
 - **Do not mock your own modules.** Replace a dependency only at a real
   seam, with an adapter (an in-memory fake is best). Mock only what you do
   not own.
+- **Shared fakes** live in `src/testing/` of the app or package, e.g.
+  `apps/api/src/testing/fake-account-store.ts`. Spec and test work writes
+  them, and they are locked like tests. Never copy a fake into a second
+  test file: move it there. Production code never imports from
+  `src/testing/`.
 - **Contracts in assertions:** parse responses with the contract schema
   (`HealthSchema.parse(body)`) so a shape change fails loudly.
 
@@ -35,6 +40,9 @@ inner loop.
   test, so they cannot share its mistakes.
 - Prefer building valid inputs over filtering random ones; keep `.filter`
   for rare exclusions.
+- `includeErrorInReport` is on for every package (the shared Vitest
+  setup), so a failure shows the error that caused it. Do not set it per
+  test.
 - When a property fails, fast-check prints the smallest counterexample.
   Decide whether the spec or the code is wrong; never just exclude the case
   to get green.

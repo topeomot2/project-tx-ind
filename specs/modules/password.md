@@ -38,7 +38,6 @@ Everything a caller must know to use this module. Tests use only this.
 - The hash string carries its own settings and salt, so the settings can
   change later and old hashes still verify. Its exact format is not part
   of the interface.
-- `verifyPassword` compares in constant time.
 - Both functions normalize the password with Unicode NFKC before hashing,
   so passwords that look the same but are encoded differently match.
 
@@ -87,6 +86,11 @@ For every two different strings `p` and `q` of 1 to 128 code points whose NFKC f
 
 Hashing is slow on purpose, so these two run with few generated inputs
 (for example `numRuns: 10`).
+
+## Safeguards
+
+- `verifyPassword` compares hashes in constant time
+  (`crypto.timingSafeEqual`): timing tests are not deterministic.
 
 ## Open questions
 

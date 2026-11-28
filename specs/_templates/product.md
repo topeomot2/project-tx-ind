@@ -28,6 +28,13 @@ One or two sentences: who needs this and what it lets them do.
 
 - Things this feature deliberately does not do.
 
+## Safeguards
+
+Rules no fast, reliable test can check. Each needs a reason. Review checks
+them by hand. "None." if there are none.
+
+- <rule>: <why it cannot be tested>
+
 ## Open questions
 
 - None.
