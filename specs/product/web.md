@@ -1,32 +1,45 @@
 ---
 id: WEB
 status: draft
-contracts: [ApiError, RegisterRequest, User, LogInRequest, Session]
+contracts:
+  [
+    ApiError,
+    RegisterRequest,
+    User,
+    LogInRequest,
+    Session,
+    VerifyEmailRequest,
+    ResendVerificationRequest,
+  ]
 ---
 
-# Web app: register, log in, log out
+# Web app: register, verify, log in, log out
 
 ## Why
 
-People need a page in the browser to create an account, log in and log
-out, instead of calling the api by hand. After logging in they see a
+People need a page in the browser to create an account, verify their
+email, log in and log out, instead of calling the api by hand. After logging in they see a
 welcome page with their name. It is the first frontend app, `apps/web`,
 and it uses the api only through the routes in `specs/product/users.md`.
 
 ## Requirements
 
 A **visitor** is someone using the web app in a browser. The pages are
-`/register`, `/login` and `/` (the welcome page). Labels, headings,
+`/register`, `/verify-email`, `/login` and `/` (the welcome page).
+Tests run the web app and the api on different origins
+(`specs/product/web-access.md`) and read emails from Mailpit. Labels, headings,
 buttons and messages are quoted exactly; tests find elements by their
 role and accessible name.
 
-### WEB-1: A visitor can register and is then logged in
+### WEB-1: A visitor can register and is asked to check their email
 
 - **Given** no account exists for a fresh email
 - **When** a visitor opens `/register`, fills in "Name" with
   `Ada Lovelace`, "Email" with that email and "Password" with
   `correct horse battery`, and presses "Create account"
-- **Then** they are on `/` and see the heading "Welcome, Ada Lovelace"
+- **Then** they see the heading "Check your email" and the text
+  "We sent a link to <email>. Open it to verify your email.", and one
+  verification email reaches that address (VERIFY-1)
 
 ### WEB-2: Registering a taken email says so
 
@@ -48,7 +61,7 @@ role and accessible name.
 
 ### WEB-4: A registered visitor can log in
 
-- **Given** an account for `Ada Lovelace` exists
+- **Given** a verified account for `Ada Lovelace` exists
 - **When** a visitor opens `/login`, fills in "Email" and "Password" and
   presses "Log in"
 - **Then** they are on `/` and see the heading "Welcome, Ada Lovelace"
@@ -95,12 +108,35 @@ role and accessible name.
 - **Then** they stay on `/login` and see the alert
   "Something went wrong. Try again."
 
+### WEB-11: Opening the link verifies the email
+
+- **Given** a visitor registered and got the email
+- **When** they open its link
+- **Then** they see the heading "Your email is verified" and a link
+  "Log in"; following it and logging in shows "Welcome, Ada Lovelace"
+
+### WEB-12: A used or broken link says so
+
+- **Given** a link that was already used, or `/verify-email?token=nope`
+- **When** a visitor opens it
+- **Then** they see the alert "This link is not valid. Ask for a new one
+  by logging in."
+
+### WEB-13: Logging in before verifying offers a new link
+
+- **Given** a visitor registered and has not opened the link
+- **When** they log in with the right email and password
+- **Then** they stay on `/login` and see the alert
+  "Verify your email first. We sent you a link." and a button
+  "Send the link again"; pressing it shows "We sent a new link." and a
+  second email reaches the address
+
 ## Out of scope
 
 - Changing the password in the web app.
 - Password reset, email verification, "remember me" choices.
 - Styling beyond a plain, readable form.
-- Serving the web app in production; it runs with Vite for dev and tests.
+- Hosting the built web app; any static host works (see `web.md`).
 
 ## Safeguards
 
@@ -109,13 +145,16 @@ role and accessible name.
 
 ## Open questions
 
+Answered by Temitope, 2026-11-28:
+
+- Registering does not log the visitor in. It sends a verification link;
+  the visitor opens it, then logs in.
+- Bearer tokens, not cookies, so the web app and the api can be on
+  different origins (`web-access.md`).
+
 Proposed answers, approved with this spec:
 
-- After registering, the web app logs in with the same email and password
-  and shows the welcome page, so the visitor does not type them twice.
 - The session (token and `expiresAt`) is kept in the browser's
   `localStorage`, so it survives a reload and closing the tab until it
-  expires. The trade-off: script injected into the page could read it.
-  An httpOnly cookie would need the api to set cookies and handle CSRF.
-- The web app calls the api through Vite's proxy at `/api`, so the api
-  needs no CORS settings.
+  expires. The trade-off: script injected into the page could read it, so
+  the web app adds no third-party scripts.

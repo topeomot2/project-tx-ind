@@ -33,26 +33,29 @@ Everything a caller must know to use this module. Tests use only this.
 
 `Accounts` (all async):
 
-| Method                                         | Returns                                                       |
-| ---------------------------------------------- | ------------------------------------------------------------- |
-| `register(RegisterRequest)`                    | `Result<User, "email_taken">`                                 |
-| `logIn(LogInRequest)`                          | `Result<Session, "invalid_credentials">`                      |
-| `authenticate(token)`                          | `User \| undefined`                                           |
-| `changePassword(token, ChangePasswordRequest)` | `Result<Session, "unauthenticated" \| "invalid_credentials">` |
-| `logOut(token)`                                | `Result<null, "unauthenticated">`                             |
+| Method                                         | Returns                                                          |
+| ---------------------------------------------- | ---------------------------------------------------------------- |
+| `register(RegisterRequest)`                    | `Result<User, "email_taken">`                                    |
+| `logIn(LogInRequest)`                          | `Result<Session, "invalid_credentials" \| "email_not_verified">` |
+| `authenticate(token)`                          | `User \| undefined`                                              |
+| `changePassword(token, ChangePasswordRequest)` | `Result<Session, "unauthenticated" \| "invalid_credentials">`    |
+| `logOut(token)`                                | `Result<null, "unauthenticated">`                                |
 
 `now: () => Date` is the clock, `store: AccountStore` the storage, and
 `jwtSecret: string` the HS256 signing key.
 
 `AccountStore` (all async):
 
-| Method                                      | Does                                                                                        |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `insertUser({ name, email, passwordHash })` | Adds a user with a new UUID and `tokenVersion: 0`; returns `StoredUser`, or `"email_taken"` |
-| `findUserByEmail(email)`                    | `StoredUser \| undefined`; exact match                                                      |
-| `findUserById(id)`                          | `StoredUser \| undefined`                                                                   |
-| `setPasswordHash(userId, passwordHash)`     | Replaces the hash and adds 1 to `tokenVersion`; returns the updated `StoredUser`            |
-| `endSessions(userId)`                       | Adds 1 to `tokenVersion` and keeps the hash; returns the updated `StoredUser`               |
+| Method                                                 | Does                                                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| `insertUser({ name, email, passwordHash })`            | Adds a user with a new UUID, `tokenVersion: 0` and `emailVerified: false`; returns `StoredUser`, or `"email_taken"` |
+| `findUserByEmail(email)`                               | `StoredUser \| undefined`; exact match                                                                              |
+| `findUserById(id)`                                     | `StoredUser \| undefined`                                                                                           |
+| `setPasswordHash(userId, passwordHash)`                | Replaces the hash and adds 1 to `tokenVersion`; returns the updated `StoredUser`                                    |
+| `endSessions(userId)`                                  | Adds 1 to `tokenVersion` and keeps the hash; returns the updated `StoredUser`                                       |
+| `markEmailVerified(userId)`                            | Sets `emailVerified: true`                                                                                          |
+| `insertVerification({ userId, tokenHash, expiresAt })` | Stores one verification link (`verification.md`)                                                                    |
+| `takeVerification(tokenHash)`                          | Deletes and returns `{ userId, expiresAt }`, or `undefined`                                                         |
 
 Rules a caller can rely on:
 
@@ -68,6 +71,9 @@ Rules a caller can rely on:
 - A password change bumps `tokenVersion`, so every token issued before it
   stops working, including the one that made the change. The change
   returns a new `Session` instead.
+- Logging in needs a verified email: with the right password and
+  `emailVerified: false`, `logIn` gives `email_not_verified`. With a wrong
+  password it gives `invalid_credentials`, verified or not.
 - Logging out bumps `tokenVersion` too, so every token of that user
   stops working, on every device. The password does not change.
 - The store only ever gets a password hash, never the password.
@@ -89,8 +95,9 @@ Rules a caller can rely on:
 
 ## Examples
 
-Unit tests use an in-memory `AccountStore` written in the test file, a
-fixed clock and a fixed test secret.
+Unit tests use the shared in-memory `AccountStore` (`src/testing/`), a
+fixed clock and a fixed test secret. Unless an example says otherwise, a
+user who logs in has had `markEmailVerified` called on the store first.
 
 ### ACC-1: Register returns the new user with the email lowercased
 
@@ -173,6 +180,14 @@ fixed clock and a fixed test secret.
 - **Input:** `logOut` with `"not-a-jwt"`, and with a token after it has
   expired
 - **Expected:** `{ ok: false, code: "unauthenticated" }` each time
+
+### ACC-16: Log in needs a verified email [draft]
+
+- **Input:** register Ada and do not verify; log in with her password;
+  log in with a wrong password; `markEmailVerified` on the store, then
+  log in with her password
+- **Expected:** `{ ok: false, code: "email_not_verified" }`;
+  `{ ok: false, code: "invalid_credentials" }`; `ok` with a `Session`
 
 ## Invariants
 

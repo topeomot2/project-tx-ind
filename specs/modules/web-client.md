@@ -26,7 +26,8 @@ session (`web-session.md`) or check form fields (`web-forms.md`).
 | `Result`          | type     | `{ ok: true, value } \| { ok: false, code }`          |
 
 `fetch` has the shape of the global `fetch`; the app passes the real one
-and `baseUrl: "/api"`. Paths are joined to `baseUrl` as given:
+and `baseUrl` from `VITE_API_URL` (`web.md`), such as
+`https://api.example.com`. Paths are joined to `baseUrl` as given:
 `baseUrl + "/users"`.
 
 `ApiClient` (all async):
@@ -86,6 +87,26 @@ a scripted `Response`, and `baseUrl: "/api"`.
 
 - **Input:** the fake answers `401` with `code: "invalid_credentials"`
 - **Expected:** `{ ok: false, code: "invalid_credentials" }`
+
+### WCL-10: Log in reports an unverified email
+
+- **Input:** the fake answers `403` with `code: "email_not_verified"`
+- **Expected:** `{ ok: false, code: "email_not_verified" }`
+
+### WCL-11: Verify email sends the token
+
+- **Input:** `verifyEmail("K")`; the fake answers `204`, then `400` with
+  `code: "invalid_token"`
+- **Expected:** one `POST /api/email-verifications` with JSON
+  `{ token: "K" }`; `{ ok: true, value: null }`, then
+  `{ ok: false, code: "invalid_token" }`
+
+### WCL-12: Resend sends the email
+
+- **Input:** `resendVerification("ada@example.com")`; the fake answers
+  `202`
+- **Expected:** one `POST /api/email-verifications/resend` with JSON
+  `{ email: "ada@example.com" }`; `null`
 
 ### WCL-5: Me sends the token and returns the user
 

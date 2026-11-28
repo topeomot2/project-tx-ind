@@ -51,7 +51,8 @@ who is calling.
 
 ### USER-4: A registered user can log in
 
-- **Given** `ada@example.com` registered with `correct horse battery`
+- **Given** `ada@example.com` registered with `correct horse battery` and
+  verified the email (`specs/product/email-verification.md`)
 - **When** a caller sends `POST /sessions` with a `LogInRequest` body
   `{ email: "ada@example.com", password: "correct horse battery" }`
 - **Then** it gets status `200` and a `Session` body with a `token` (a JWT)
@@ -151,6 +152,8 @@ Expired tokens are rejected too; that is checked in
 
 - Password reset by email, email verification.
 - Ending one session only: logging out ends them all (USER-13).
+- Email verification is its own spec:
+  `specs/product/email-verification.md`.
 - Rate limiting and account lockout after failed logins.
 - Checking passwords against breach lists.
 - Roles and permissions.
@@ -167,7 +170,9 @@ Answered by Temitope, 2026-11-27:
 - Password rules: 15 to 128 characters, counted as Unicode code points;
   any characters; no composition rules. Passwords are normalized with
   Unicode NFKC before hashing.
-- Email: compared without case, stored lowercased; no verification email.
+- Email: compared without case, stored lowercased. (Changed 2026-11-28:
+  a verification email is now sent; see
+  `specs/product/email-verification.md`.)
 - Registering a taken email answers `409 email_taken`, accepting that it
   reveals the email has an account.
 - Registering returns only the `User`; the caller logs in next.
@@ -178,8 +183,12 @@ Answered by Temitope, 2026-11-27:
 Proposed for the web app, to be answered with USER-11 to USER-14:
 
 - Logging out bumps the user's token version, the same way a password
-  change does, so it ends every session of that user on every device.
+  change does, so it ends every session of that user on every device
+  (agreed by Temitope, 2026-11-28).
   This needs no new table. Ending only the current session would need a
   list of revoked tokens (`jti`) kept until they expire.
 - `GET /users/me` gives the web app the name to show, because a `Session`
   holds only the token.
+- The token stays a bearer token in the `Authorization` header, not a
+  cookie, so the web app and the api can be deployed to different origins
+  (`specs/product/web-access.md`; agreed by Temitope, 2026-11-28).
