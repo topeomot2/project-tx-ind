@@ -1,7 +1,9 @@
 import {
+  LogInRequestSchema,
   RegisterRequestSchema,
   type ApiError,
   type Health,
+  type Session,
   type User,
 } from "@repo/contracts";
 import { Hono } from "hono";
@@ -59,6 +61,18 @@ export function createApp({ db, accounts }: AppDeps): Hono {
     return c.json(result.value satisfies User, 201);
   });
 
+  app.post("/sessions", async (c) => {
+    const body = await parseBody(c.req.raw, LogInRequestSchema);
+    if (!body.ok) {
+      return c.json(body.error, 400);
+    }
+    const result = await accounts.logIn(body.value);
+    if (!result.ok) {
+      return c.json(invalidCredentials, 401);
+    }
+    return c.json(result.value satisfies Session);
+  });
+
   app.notFound((c) =>
     c.json(
       {
@@ -83,6 +97,12 @@ export function createApp({ db, accounts }: AppDeps): Hono {
 
   return app;
 }
+
+/** One body for every failed log in, so it does not say which part was wrong. */
+const invalidCredentials: ApiError = {
+  code: "invalid_credentials",
+  message: "The email or password is wrong.",
+};
 
 type Parsed<T> = { ok: true; value: T } | { ok: false; error: ApiError };
 
