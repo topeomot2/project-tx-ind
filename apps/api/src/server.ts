@@ -8,12 +8,11 @@ import { parseEnv } from "./env.ts";
 const env = parseEnv(process.env);
 const db = createPostgresDb(env.DATABASE_URL);
 const store = createPostgresAccountStore(env.DATABASE_URL);
-// Stub wiring: JWT_SECRET comes from parseEnv (API-10), and the store's
-// migrate() runs before listening (specs/modules/api.md).
+await store.migrate();
 const accounts = createAccounts({
   store,
   now: () => new Date(),
-  jwtSecret: "",
+  jwtSecret: env.JWT_SECRET,
 });
 
 const server = serve(
