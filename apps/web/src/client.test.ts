@@ -117,7 +117,7 @@ describe("api client", () => {
   });
 
   it("WCL-8: a success body that breaks its contract throws", async () => {
-    const { client } = setup(
+    const { client, sent } = setup(
       { status: 200, json: { token: "x" } },
       { status: 200, json: { name: "Ada" } },
     );
@@ -126,6 +126,11 @@ describe("api client", () => {
       client.logIn({ email: ada.email, password: ada.password }),
     ).rejects.toThrow(Error);
     await expect(client.me("T")).rejects.toThrow(Error);
+    // The api answered both: the bodies, not the requests, were wrong.
+    expect(sent.map((request) => request.url)).toEqual([
+      "/api/sessions",
+      "/api/users/me",
+    ]);
   });
 
   it("WCL-10: log in reports an unverified email", async () => {

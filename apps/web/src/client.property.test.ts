@@ -48,6 +48,8 @@ describe("api client", () => {
         const client = createApiClient({ baseUrl: "/api", fetch: fake.fetch });
 
         await expect(calls[method](client)).rejects.toThrow(Error);
+        // The request went out; the answer is what was unexpected.
+        expect(fake.sent).toHaveLength(1);
       }),
     );
   });
