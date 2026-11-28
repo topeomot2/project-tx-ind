@@ -28,7 +28,22 @@ contracts: [Health] # schemas from @repo/contracts this spec relies on
 ---
 ```
 
-Tests are written only from an `approved` spec.
+Tests are written only from an `approved` spec, and only for requirements
+that are not marked `[draft]`.
+
+## Adding to an approved spec
+
+Add the new requirement with the next free ID and end its heading with
+`[draft]`:
+
+```md
+### ACC-17: Log out ends the session [draft]
+```
+
+The rest of the spec stays approved. A human approves the new requirement
+by removing `[draft]`. Until then `pnpm check:spec-ids` reports any test
+that names it. Keep the file small: when a spec grows past a handful of
+new requirements, start a new module spec instead.
 
 ## Requirement IDs
 
@@ -46,6 +61,15 @@ Each requirement has a stable ID: `<PREFIX>-<n>`, e.g. `HEALTH-1`.
 - **Module:** examples (one input, one expected output) and invariants
   (rules that hold for every valid input). Invariants become property tests.
 - Expected values come from the spec, not from running the code.
+
+## Safeguards
+
+Some rules cannot be checked by a fast, reliable test, such as equal
+response time for real and unknown emails, or a constant-time compare.
+List them under "Safeguards" in the spec, each with why it cannot be
+tested. They have no ID and no test. Implementation must build them, and
+review checks each one by hand. Prefer a test whenever one is possible;
+a safeguard is the exception.
 
 ## Open questions
 

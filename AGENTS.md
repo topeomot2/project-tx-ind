@@ -13,6 +13,7 @@ specs/product/       what callers can observe -> E2E tests (locked, hard)
 specs/modules/       one module's interface -> unit + property tests (locked, light)
 packages/services/   starts compose.yaml services for tests (Testcontainers)
 tests/e2e/           Playwright tests (locked)
+apps/*/src/testing/  shared test fakes, e.g. in-memory adapters (locked, light)
 compose.yaml         services the apps need (Postgres)
 factory.json         manifest: apps, their services, locked paths
 docs/GLOSSARY.md     the words we use, and the ones we don't
@@ -45,11 +46,12 @@ pnpm dev                # run apps in watch mode
 ## How work flows
 
 1. A **spec** says what must be true (`specs/`). A human approves it with
-   its contracts.
+   its contracts. A new requirement in an approved spec stays `[draft]`
+   until approved on its own (`specs/README.md`).
 2. **Tests** are written from the spec, each named with a requirement ID,
    and locked. Skill: `write-specs`.
-3. **Implementation** makes them pass, one requirement at a time. Skill:
-   `implement`.
+3. **Implementation** makes them pass, in requirement ID order. Each
+   commit names the requirements it turns green. Skill: `implement`.
 4. **Review** checks the work and does any refactoring.
 
 Both sides follow `tdd-contracts`. For module and interface design, use
@@ -60,8 +62,21 @@ Both sides follow `tdd-contracts`. For module and interface design, use
 - `spec/<topic>`: spec and test work (specs, contracts, tests, stubs).
 - `impl/<topic>`: implementation work. Any other branch name counts as
   implementation work.
-- Stacked: a PR from `impl/<topic>` targets `spec/<topic>`. Once green,
-  `spec/<topic>` merges to `main` in one PR.
+
+Every feature reaches `main` as a stack of two PRs:
+
+1. **Spec PR**, `spec/<topic>` into `main`, opened as a **draft**. Its new
+   tests fail on purpose, so `Check` stays red here; `Locks` must be green,
+   because it runs `pnpm check:red`.
+2. **Impl PR**, `impl/<topic>` (branched from `spec/<topic>`) into
+   `spec/<topic>`. All four checks must be green. Merge it into
+   `spec/<topic>`.
+3. The spec PR now holds specs, tests and code, and goes green. Mark it
+   ready and merge it into `main`. RED is still judged at the locking
+   commit, so the merged implementation does not break it.
+
+Changes to the rules and checks alone (no new feature tests) are one
+`spec/<topic>` PR into `main`.
 
 ## Locked paths
 
@@ -78,6 +93,15 @@ Implementation work reads these but never edits them. The full list is
 CI enforces this on every pull request (`pnpm check:locks`), and
 `.github/CODEOWNERS` makes a human review these paths. If one is wrong,
 stop and raise a change request. See `docs/rules/tdd.md`.
+
+## Approval
+
+The owner's approval of a spec, its contracts and each PR is the real
+gate; agents never approve their own work. PRs that agents open can show
+the owner as author, and GitHub does not let an author approve their own
+PR. So the `main` ruleset lets repository admins bypass the review, and
+the owner merges as admin after approving in writing (in the PR or the
+task thread). Required checks still apply.
 
 ## Done means
 

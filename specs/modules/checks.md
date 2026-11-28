@@ -22,7 +22,8 @@ Everything a caller must know to use this module. Tests use only this.
 
 | Export              | Kind     | Summary                                                          |
 | ------------------- | -------- | ---------------------------------------------------------------- |
-| `idsFromSpec`       | function | Status and live requirement IDs of one spec                      |
+| `idsFromSpec`       | function | Status, live requirement IDs and `[draft]` IDs of one spec       |
+| `approvedIds`       | function | IDs of one spec that tests may be written for                    |
 | `idsFromTestSource` | function | IDs that test names start with in one test file                  |
 | `idFromTitle`       | function | The ID a test title starts with                                  |
 | `compareIds`        | function | Approved IDs with no test; test IDs with no approved requirement |
@@ -56,7 +57,7 @@ CLIs, run from the repo root: `pnpm check:spec-ids`, `pnpm check:locks`,
 
 - **Input:** a spec with `status: approved`, headings `### SHOP-1: ...`,
   `### ~~SHOP-2: ...~~` and `### SHOP-3: ...`, and `SHOP-9` in body text
-- **Expected:** status `approved`, IDs `SHOP-1`, `SHOP-3`
+- **Expected:** status `approved`, IDs `SHOP-1`, `SHOP-3`, no drafts
 
 ### CHK-2: Reads only the IDs that test names start with
 
@@ -139,6 +140,32 @@ CLIs, run from the repo root: `pnpm check:spec-ids`, `pnpm check:locks`,
   tests pass before any implementation. The checks are tooling, changed
   only on spec branches with human approval, and land with their
   implementation. The CLI prints how many test IDs it skipped.
+
+### CHK-14: Reads requirements marked draft
+
+- **Input:** an approved spec with headings `### SHOP-1: ...`,
+  `### SHOP-4: ... [draft]` and `### ~~SHOP-5: ... [draft]~~`
+- **Expected:** IDs `SHOP-1`, `SHOP-4`; drafts `SHOP-4`
+- **Why:** a requirement can be added to an approved spec without
+  reopening the whole file. It stays `[draft]` until a human approves it
+  by removing the marker.
+
+### CHK-15: Approved IDs are the unmarked ones of an approved spec
+
+- **Input:** a spec with `SHOP-1` and `SHOP-4 [draft]`, once with
+  `status: approved` and once with `status: draft`
+- **Expected:** `SHOP-1`; then none
+- **Why:** `pnpm check:spec-ids` uses these, so a test for a draft
+  requirement is reported as naming no approved requirement.
+
+### CHK-16: Says when fast-check hid why a property failed
+
+- **Input:** new `ORD-4` fails with `Property failed after 1 tests` and no
+  `Got error:` line
+- **Expected:** one problem, which names `includeErrorInReport`
+- **Why:** fast-check 4 keeps the error as `cause`, which the test report
+  leaves out. The shared Vitest setup turns `includeErrorInReport` on;
+  this hint says what to check when that setup is missing.
 
 ## Invariants
 

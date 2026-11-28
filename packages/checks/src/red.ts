@@ -15,6 +15,12 @@ export function classifyFailure(messages: readonly string[]): FailureKind {
   return "other";
 }
 
+/** A fast-check failure whose message leaves out the error that caused it. */
+function hidesCause(messages: readonly string[]): boolean {
+  const text = messages.join("\n");
+  return text.includes("Property failed after") && !text.includes("Got error:");
+}
+
 export interface TestResult {
   title: string;
   status: string;
@@ -42,7 +48,13 @@ export function redProblems(
       problems.push(`${result.title}: passes before any implementation exists`);
     } else if (classifyFailure(result.failureMessages) === "other") {
       const reason = result.failureMessages[0]?.split("\n")[0] ?? "no message";
-      problems.push(`${result.title}: fails for the wrong reason: ${reason}`);
+      const hint = hidesCause(result.failureMessages)
+        ? " (fast-check hid the cause: is includeErrorInReport on? " +
+          "The shared Vitest setup in @repo/config turns it on)"
+        : "";
+      problems.push(
+        `${result.title}: fails for the wrong reason: ${reason}${hint}`,
+      );
     }
   }
 

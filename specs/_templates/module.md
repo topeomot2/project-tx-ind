@@ -47,9 +47,18 @@ Each example is one unit test.
 
 Each invariant is one property test: a rule that holds for every valid input.
 
+<!-- A requirement added after approval ends its heading with [draft]. -->
+
 ### PREFIX-2: <short name>
 
 For every <input description>, <rule>.
+
+## Safeguards
+
+Rules no fast, reliable test can check. Each needs a reason. Review checks
+them by hand. "None." if there are none.
+
+- <rule>: <why it cannot be tested>
 
 ## Open questions
 

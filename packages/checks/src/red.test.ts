@@ -23,6 +23,18 @@ describe("RED check", () => {
     expect(classifyFailure([message])).toBe(kind);
   });
 
+  it("CHK-16: says when fast-check hid why a property failed", () => {
+    const problems = redProblems(new Set(["ORD-4"]), [
+      failed(
+        "ORD-4: totals are never negative",
+        "Error: Property failed after 1 tests\nCounterexample: [0]",
+      ),
+    ]);
+
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain("includeErrorInReport");
+  });
+
   it("CHK-8: accepts new tests that fail with an assertion or NotImplemented", () => {
     const problems = redProblems(new Set(["ORD-1", "ORD-2"]), [
       failed("ORD-1: creates an order", "AssertionError: expected 1 to be 2"),

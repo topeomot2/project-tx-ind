@@ -1,12 +1,7 @@
 import { SessionSchema, UserSchema } from "@repo/contracts";
-import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import {
-  createAccounts,
-  type AccountStore,
-  type Accounts,
-  type StoredUser,
-} from "./accounts.ts";
+import { createAccounts, type Accounts } from "./accounts.ts";
+import { fakeAccountStore } from "./testing/fake-account-store.ts";
 
 const secret = "test-secret-that-is-at-least-32-characters";
 const ada = {
@@ -16,55 +11,10 @@ const ada = {
 };
 const newPassword = "tr0ub4dor & 3 more";
 
-/**
- * In-memory adapter for the AccountStore seam. Records every value it is
- * given, so ACC-11 can check that no password reaches the store.
- */
-function fakeStore(): AccountStore & { received: unknown[] } {
-  const users = new Map<string, StoredUser>();
-  const received: unknown[] = [];
-  return {
-    received,
-    insertUser(user) {
-      received.push(user);
-      if ([...users.values()].some((u) => u.email === user.email)) {
-        return Promise.resolve("email_taken");
-      }
-      const stored = { ...user, id: randomUUID(), tokenVersion: 0 };
-      users.set(stored.id, stored);
-      return Promise.resolve({ ...stored });
-    },
-    findUserByEmail(email) {
-      received.push(email);
-      const found = [...users.values()].find((u) => u.email === email);
-      return Promise.resolve(found && { ...found });
-    },
-    findUserById(id) {
-      received.push(id);
-      const found = users.get(id);
-      return Promise.resolve(found && { ...found });
-    },
-    setPasswordHash(userId, passwordHash) {
-      received.push(userId, passwordHash);
-      const found = users.get(userId);
-      if (found === undefined) {
-        return Promise.reject(new Error(`No user ${userId}`));
-      }
-      const updated = {
-        ...found,
-        passwordHash,
-        tokenVersion: found.tokenVersion + 1,
-      };
-      users.set(userId, updated);
-      return Promise.resolve({ ...updated });
-    },
-  };
-}
-
 /** Accounts with a fake store and a clock the test moves by hand. */
 function setup(start = "2026-11-27T12:00:00.000Z") {
   const clock = { now: new Date(start) };
-  const store = fakeStore();
+  const store = fakeAccountStore();
   const accounts = createAccounts({
     store,
     now: () => clock.now,

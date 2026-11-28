@@ -20,8 +20,8 @@ interface, seam, adapter.
    from its product spec, so one thin path works end to end first.
 3. `write-specs` writes and locks **all** tests for that module spec, plus a
    stub that throws `NotImplemented`.
-4. `implement` makes them pass **one requirement at a time**, in ID order,
-   committing after each one goes green.
+4. `implement` makes them pass in ID order. Each commit names every
+   requirement it turns green.
 5. Refactoring happens in review, not in this loop.
 
 ## What makes a good test
@@ -52,7 +52,8 @@ interface, seam, adapter.
 7. **Fake discipline.** A fake is never the thing under test. Build fakes
    from the contract schemas so they have the full real shape. Test-only
    helpers live in test files, never in production code. Learn what a
-   dependency really does before faking it.
+   dependency really does before faking it. A fake used by more than
+   one test file lives in `src/testing/`, which is locked like the tests.
 8. **A bug fix starts with a failing test** that reproduces the bug.
 9. **Names:** requirement ID, then domain words from the spec:
    `it("API-2: answers an unknown route with a not_found error")`.
@@ -62,7 +63,8 @@ interface, seam, adapter.
 A new test must fail before the code exists, and for the right reason:
 
 - **Acceptable:** an assertion failure, or `Error("NotImplemented")` from
-  the stub.
+  the stub. In a property test that shows as fast-check's "Property
+  failed" with `Got error: NotImplemented`.
 - **Not acceptable:** module not found, a syntax or type error, a
   `TypeError` inside the test itself, a timeout. Fix the test or the stub
   first.

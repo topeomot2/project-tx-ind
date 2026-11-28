@@ -5,15 +5,30 @@ export interface SpecIds {
   status: string | undefined;
   /** Live requirement IDs. Struck-through (retired) ones are left out. */
   ids: string[];
+  /** Live IDs whose heading ends in `[draft]`: not approved yet. */
+  drafts: string[];
 }
 
 /** Reads the status and requirement IDs from one spec's Markdown. */
 export function idsFromSpec(markdown: string): SpecIds {
   const status = /^status:\s*(\S+)/m.exec(markdown)?.[1];
-  const ids = [
-    ...markdown.matchAll(new RegExp(String.raw`^###\s+(${ID}):`, "gm")),
-  ].map((match) => match[1] ?? "");
-  return { status, ids };
+  const headings = [
+    ...markdown.matchAll(new RegExp(String.raw`^###\s+(${ID}):(.*)$`, "gm")),
+  ];
+  const ids = headings.map((match) => match[1] ?? "");
+  const drafts = headings
+    .filter((match) => /\[draft\]\s*$/.test(match[2] ?? ""))
+    .map((match) => match[1] ?? "");
+  return { status, ids, drafts };
+}
+
+/**
+ * The requirement IDs of one spec that tests may be written for: every live
+ * ID of an approved spec, except those still marked `[draft]`.
+ */
+export function approvedIds(markdown: string): string[] {
+  const { status, ids, drafts } = idsFromSpec(markdown);
+  return status === "approved" ? ids.filter((id) => !drafts.includes(id)) : [];
 }
 
 /**
