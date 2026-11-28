@@ -19,20 +19,27 @@ Everything a caller must know to use this module. Tests use only this.
 
 ### Exports
 
-| Export      | Kind     | Summary                                              |
-| ----------- | -------- | ---------------------------------------------------- |
-| `createApp` | function | `createApp({ db })`: the Hono app, not yet listening |
-| `Db`        | type     | What the app needs from its database (the seam)      |
-| `parseEnv`  | function | Reads `PORT` and `DATABASE_URL`; throws if invalid   |
+| Export      | Kind     | Summary                                                          |
+| ----------- | -------- | ---------------------------------------------------------------- |
+| `createApp` | function | `createApp({ db, accounts })`: the Hono app, not yet listening   |
+| `Db`        | type     | What the app needs from its database (the seam)                  |
+| `parseEnv`  | function | Reads `PORT`, `DATABASE_URL` and `JWT_SECRET`; throws if invalid |
 
 ### Error modes
 
-| Situation                 | Result                                                        |
-| ------------------------- | ------------------------------------------------------------- |
-| No route matches          | `404`, `code: "not_found"`                                    |
-| A handler throws          | `500`, `code: "internal_error"`; cause logged, never returned |
-| Database down on `/ready` | `503`, `code: "not_ready"`                                    |
-| Invalid env               | `parseEnv` throws; the server does not start                  |
+| Situation                                                  | Result                                                         |
+| ---------------------------------------------------------- | -------------------------------------------------------------- |
+| No route matches                                           | `404`, `code: "not_found"`                                     |
+| A handler throws                                           | `500`, `code: "internal_error"`; cause logged, never returned  |
+| Database down on `/ready`                                  | `503`, `code: "not_ready"`                                     |
+| Invalid env                                                | `parseEnv` throws; the server does not start                   |
+| Body that is not valid JSON or does not match its contract | `400`, `code: "validation_failed"`; `details` names the fields |
+
+The user routes (`POST /users`, `POST /sessions`,
+`PUT /users/me/password`) are thin: they parse the body with the
+contract, call `accounts` (`specs/modules/accounts.md`) and map its result
+to HTTP as `specs/product/users.md` says. They are tested by the E2E
+tests for that spec.
 
 ### Configuration
 
@@ -41,6 +48,13 @@ Everything a caller must know to use this module. Tests use only this.
   `postgres://app:app@localhost:5432/app`, matching `compose.yaml`.
 
 Both are read by `server.ts` through `parseEnv`, never by `createApp`.
+`server.ts` also runs the account store's `migrate()` before it listens.
+
+- `JWT_SECRET`: the key that signs tokens, at least 32 characters.
+  Required, no default: the server does not start without it.
+
+`parseEnv` examples below (API-7 to API-9) set a valid `JWT_SECRET`
+unless they say otherwise, and it appears in the result.
 
 ## Examples
 
@@ -89,6 +103,11 @@ Both are read by `server.ts` through `parseEnv`, never by `createApp`.
 
 - **Input:** `PORT` of `"zero"` or `"0"`, or a `DATABASE_URL` that is not a URL
 - **Expected:** throws
+
+### API-10: parseEnv requires a JWT_SECRET of at least 32 characters
+
+- **Input:** no `JWT_SECRET`; a 31-character one; a 32-character one
+- **Expected:** throws; throws; returns it as `JWT_SECRET`
 
 ## Invariants
 
