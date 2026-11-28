@@ -83,10 +83,10 @@ Links expire 24 hours after they are sent; that is checked in
 
 ## Open questions
 
-Proposed answers, approved with this spec:
+Answered by Temitope, 2026-11-28:
 
-- A user who has not verified gets `403 email_not_verified` only when the
-  password is right.
+- A user who has not verified cannot log in. They get
+  `403 email_not_verified` only when the password is right.
 - A link lasts 24 hours. Asking for a new one does not end older links.
 - Mail goes out over SMTP (`SMTP_URL`, `MAIL_FROM`). Dev and tests use
   Mailpit from `compose.yaml`; a real provider is set up at deployment.
