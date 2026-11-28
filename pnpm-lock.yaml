@@ -350,6 +350,9 @@ importers:
       eslint-plugin-playwright:
         specifier: 'catalog:'
         version: 2.12.2(eslint@10.15.0)
+      fast-check:
+        specifier: 'catalog:'
+        version: 4.11.0
       globals:
         specifier: 'catalog:'
         version: 17.14.0

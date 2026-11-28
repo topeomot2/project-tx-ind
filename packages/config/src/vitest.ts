@@ -1,4 +1,8 @@
+import { fileURLToPath } from "node:url";
 import { configDefaults, type ViteUserConfig } from "vitest/config";
+
+/** Runs before every test file: shared fast-check settings. */
+const setupFiles = [fileURLToPath(new URL("vitest-setup.ts", import.meta.url))];
 
 /**
  * Shared Vitest settings. A package merges this into its own config:
@@ -23,6 +27,7 @@ const config: ViteUserConfig = {
     restoreMocks: true,
     // Fail on test.only left behind in CI.
     allowOnly: !process.env["CI"],
+    setupFiles,
   },
 };
 
@@ -34,6 +39,7 @@ export const integration: ViteUserConfig = {
     include: ["src/**/*.integration.test.{ts,js}"],
     restoreMocks: true,
     allowOnly: !process.env["CI"],
+    setupFiles,
     // Starting a container takes seconds, not milliseconds.
     hookTimeout: 120_000,
     testTimeout: 30_000,
