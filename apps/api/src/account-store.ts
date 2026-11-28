@@ -25,6 +25,8 @@ function toStoredUser(row: Row): StoredUser {
     email: row.email,
     passwordHash: row.password_hash,
     tokenVersion: row.token_version,
+    // Stub: the implementation reads the email_verified column.
+    emailVerified: false,
   };
 }
 
@@ -82,6 +84,18 @@ export function createPostgresAccountStore(url: string): PostgresAccountStore {
         throw new Error(`No user ${userId}`);
       }
       return toStoredUser(row);
+    },
+    endSessions() {
+      throw new Error("NotImplemented");
+    },
+    markEmailVerified() {
+      throw new Error("NotImplemented");
+    },
+    insertVerification() {
+      throw new Error("NotImplemented");
+    },
+    takeVerification() {
+      throw new Error("NotImplemented");
     },
   };
 }

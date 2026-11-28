@@ -96,8 +96,9 @@ Rules a caller can rely on:
 ## Examples
 
 Unit tests use the shared in-memory `AccountStore` (`src/testing/`), a
-fixed clock and a fixed test secret. Unless an example says otherwise, a
-user who logs in has had `markEmailVerified` called on the store first.
+fixed clock and a fixed test secret. Unless an example says otherwise, the
+store marks new users verified (`verifyOnInsert`), as if they had used
+their link.
 
 ### ACC-1: Register returns the new user with the email lowercased
 

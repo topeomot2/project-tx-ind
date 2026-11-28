@@ -12,9 +12,9 @@ const ada = {
 const newPassword = "tr0ub4dor & 3 more";
 
 /** Accounts with a fake store and a clock the test moves by hand. */
-function setup(start = "2026-11-27T12:00:00.000Z") {
+function setup(start = "2026-11-27T12:00:00.000Z", verifyOnInsert = true) {
   const clock = { now: new Date(start) };
-  const store = fakeAccountStore();
+  const store = fakeAccountStore({ verifyOnInsert });
   const accounts = createAccounts({
     store,
     now: () => clock.now,
@@ -259,5 +259,64 @@ describe("accounts", () => {
     const seen = JSON.stringify(store.received);
     expect(seen).not.toContain(ada.password);
     expect(seen).not.toContain(newPassword);
+  });
+});
+
+describe("accounts log out", () => {
+  it("ACC-14: log out ends every token of that user only", async () => {
+    const { accounts } = setup();
+    const t1 = await registerAndLogIn(accounts);
+    const t2 = await registerAndLogIn(accounts);
+    const t3 = await registerAndLogIn(accounts, {
+      name: "Grace Hopper",
+      email: "grace@example.com",
+      password: "a ship in harbour is safe",
+    });
+
+    const result = await accounts.logOut(t1);
+    const again = await registerAndLogIn(accounts);
+
+    expect(result).toEqual({ ok: true, value: null });
+    expect(await accounts.authenticate(t1)).toBeUndefined();
+    expect(await accounts.authenticate(t2)).toBeUndefined();
+    expect((await accounts.authenticate(t3))?.email).toBe("grace@example.com");
+    expect((await accounts.authenticate(again))?.email).toBe("ada@example.com");
+  });
+
+  it("ACC-15: log out needs a token that is a JWT", async () => {
+    const { accounts } = setup();
+    await registerAndLogIn(accounts);
+
+    const result = await accounts.logOut("not-a-jwt");
+
+    expect(result).toEqual({ ok: false, code: "unauthenticated" });
+  });
+
+  it("ACC-15: log out needs a token that has not expired", async () => {
+    const { accounts, clock } = setup("2026-11-27T12:00:00.000Z");
+    const token = await registerAndLogIn(accounts);
+    clock.now = new Date("2026-11-28T12:00:00.000Z");
+
+    const result = await accounts.logOut(token);
+
+    expect(result).toEqual({ ok: false, code: "unauthenticated" });
+  });
+});
+
+describe("accounts and verified emails", () => {
+  it("ACC-16: log in needs a verified email", async () => {
+    const { accounts, store } = setup("2026-11-27T12:00:00.000Z", false);
+    const registered = await accounts.register(ada);
+    const id = registered.ok ? registered.value.id : "";
+
+    const before = await accounts.logIn(ada);
+    const wrong = await accounts.logIn({ ...ada, password: "wrong password" });
+    await store.markEmailVerified(id);
+    const after = await accounts.logIn(ada);
+
+    expect(before).toEqual({ ok: false, code: "email_not_verified" });
+    expect(wrong).toEqual({ ok: false, code: "invalid_credentials" });
+    expect(after.ok).toBe(true);
+    SessionSchema.parse(after.ok ? after.value : undefined);
   });
 });

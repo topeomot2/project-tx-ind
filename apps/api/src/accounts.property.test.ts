@@ -6,7 +6,7 @@ import { fakeAccountStore } from "./testing/fake-account-store.ts";
 
 function setup() {
   return createAccounts({
-    store: fakeAccountStore(),
+    store: fakeAccountStore({ verifyOnInsert: true }),
     now: () => new Date("2026-11-27T12:00:00.000Z"),
     jwtSecret: "test-secret-that-is-at-least-32-characters",
   });

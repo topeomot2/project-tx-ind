@@ -11,10 +11,14 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { Accounts } from "./accounts.ts";
 import type { Db } from "./db.ts";
+import type { Verification } from "./verification.ts";
 
 export interface AppDeps {
   db: Db;
   accounts: Accounts;
+  verification: Verification;
+  /** Origins allowed by CORS (specs/product/web-access.md). */
+  webOrigins: readonly string[];
 }
 
 /**

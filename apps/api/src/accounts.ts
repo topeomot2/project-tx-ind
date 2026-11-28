@@ -38,11 +38,13 @@ export interface StoredUser {
   passwordHash: string;
   /** Bumped on every password change; tokens carry the version they had. */
   tokenVersion: number;
+  /** True once the user has used a verification link. */
+  emailVerified: boolean;
 }
 
 /** What accounts needs from storage. The seam for tests. */
 export interface AccountStore {
-  /** Adds a user with a new UUID and tokenVersion 0. */
+  /** Adds a user with a new UUID, tokenVersion 0 and emailVerified false. */
   insertUser(user: {
     name: string;
     email: string;
@@ -53,17 +55,35 @@ export interface AccountStore {
   findUserById(id: string): Promise<StoredUser | undefined>;
   /** Replaces the hash and adds 1 to tokenVersion. */
   setPasswordHash(userId: string, passwordHash: string): Promise<StoredUser>;
+  /** Adds 1 to tokenVersion and keeps the hash. */
+  endSessions(userId: string): Promise<StoredUser>;
+  /** Sets emailVerified to true. */
+  markEmailVerified(userId: string): Promise<void>;
+  /** Stores one verification link, by the hash of its token. */
+  insertVerification(verification: {
+    userId: string;
+    tokenHash: string;
+    expiresAt: Date;
+  }): Promise<void>;
+  /** Deletes a stored link and returns it, or undefined if there is none. */
+  takeVerification(
+    tokenHash: string,
+  ): Promise<{ userId: string; expiresAt: Date } | undefined>;
 }
 
 export interface Accounts {
   register(request: RegisterRequest): Promise<Result<User, "email_taken">>;
-  logIn(request: LogInRequest): Promise<Result<Session, "invalid_credentials">>;
+  logIn(
+    request: LogInRequest,
+  ): Promise<Result<Session, "invalid_credentials" | "email_not_verified">>;
   /** The user a token belongs to, or undefined if it is not valid now. */
   authenticate(token: string): Promise<User | undefined>;
   changePassword(
     token: string,
     request: ChangePasswordRequest,
   ): Promise<Result<Session, "unauthenticated" | "invalid_credentials">>;
+  /** Ends every token of the token's user. */
+  logOut(token: string): Promise<Result<null, "unauthenticated">>;
 }
 
 export interface AccountsDeps {
@@ -154,6 +174,9 @@ export function createAccounts({
         await hashPassword(newPassword),
       );
       return { ok: true, value: await issueSession(updated) };
+    },
+    logOut() {
+      throw new Error("NotImplemented");
     },
   };
 }

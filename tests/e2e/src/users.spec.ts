@@ -6,6 +6,7 @@ import {
 } from "@repo/contracts";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { randomUUID } from "node:crypto";
+import { newestToken } from "./mail.ts";
 
 const password = "correct horse battery";
 const newPassword = "tr0ub4dor & 3 more";
@@ -13,10 +14,22 @@ const newPassword = "tr0ub4dor & 3 more";
 /** A fresh email for each test, so tests never share an account. */
 const freshEmail = () => `ada-${randomUUID()}@example.com`;
 
+/**
+ * Registers and verifies the email through the emailed link, so the user
+ * can log in (USER-4 needs a verified email since VERIFY-3).
+ */
 async function register(request: APIRequestContext, email: string) {
-  return request.post("/users", {
+  const response = await request.post("/users", {
     data: { name: "Ada Lovelace", email, password },
   });
+  if (response.status() === 201) {
+    const token = await newestToken(request, email);
+    const verified = await request.post("/email-verifications", {
+      data: { token },
+    });
+    expect(verified.status()).toBe(204);
+  }
+  return response;
 }
 
 async function logIn(
@@ -264,4 +277,88 @@ test("USER-10: the new password must follow the password rules", async ({
   expect(response.status()).toBe(400);
   expect(await errorCode(response)).toBe("validation_failed");
   expect(withOld.status()).toBe(200);
+});
+
+async function me(request: APIRequestContext, token: string | undefined) {
+  return request.get("/users/me", {
+    headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
+  });
+}
+
+async function logOut(request: APIRequestContext, token: string | undefined) {
+  return request.delete("/users/me/sessions", {
+    headers: token === undefined ? {} : { authorization: `Bearer ${token}` },
+  });
+}
+
+test("USER-11: a logged-in user can read their own account", async ({
+  request,
+}) => {
+  const email = freshEmail();
+  await register(request, email);
+  const token = await tokenFor(request, email);
+
+  const response = await me(request, token);
+
+  expect(response.status()).toBe(200);
+  const user = UserSchema.parse(await response.json());
+  expect(user).toEqual({ id: user.id, name: "Ada Lovelace", email });
+});
+
+test("USER-12: reading your own account needs a valid session", async ({
+  request,
+}) => {
+  const email = freshEmail();
+  await register(request, email);
+  const token = await tokenFor(request, email);
+  const at = token.lastIndexOf(".") + 1;
+  const forged =
+    token.slice(0, at) + (token[at] === "A" ? "B" : "A") + token.slice(at + 1);
+
+  const responses = [
+    await me(request, undefined),
+    await me(request, "not-a-jwt"),
+    await me(request, forged),
+  ];
+
+  for (const response of responses) {
+    expect(response.status()).toBe(401);
+    expect(await errorCode(response)).toBe("unauthenticated");
+  }
+});
+
+test("USER-13: logging out ends every session of that user", async ({
+  request,
+}) => {
+  const ada = freshEmail();
+  const grace = freshEmail();
+  await register(request, ada);
+  await register(request, grace);
+  const t1 = await tokenFor(request, ada);
+  const t2 = await tokenFor(request, ada);
+  const t3 = await tokenFor(request, grace);
+
+  const response = await logOut(request, t1);
+
+  expect(response.status()).toBe(204);
+  expect(await response.body()).toHaveLength(0);
+  for (const old of [t1, t2]) {
+    const result = await me(request, old);
+    expect(result.status()).toBe(401);
+    expect(await errorCode(result)).toBe("unauthenticated");
+  }
+  expect((await me(request, t3)).status()).toBe(200);
+  expect((await logIn(request, ada)).status()).toBe(200);
+});
+
+test("USER-14: logging out needs a valid session", async ({ request }) => {
+  const responses = [
+    await logOut(request, undefined),
+    await logOut(request, "not-a-jwt"),
+  ];
+
+  for (const response of responses) {
+    expect(response.status()).toBe(401);
+    expect(await errorCode(response)).toBe("unauthenticated");
+  }
 });
