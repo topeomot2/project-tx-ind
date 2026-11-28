@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { Accounts } from "./accounts.ts";
 import { createApp } from "./app.ts";
 import type { Db } from "./db.ts";
+import type { Verification } from "./verification.ts";
 
 /** In-memory adapter for the Db seam. */
 function fakeDb({ reachable }: { reachable: boolean }): Db {
@@ -18,10 +19,23 @@ const unusedAccounts: Accounts = {
   logIn: () => Promise.reject(new Error("accounts is not used here")),
   authenticate: () => Promise.reject(new Error("accounts is not used here")),
   changePassword: () => Promise.reject(new Error("accounts is not used here")),
+  logOut: () => Promise.reject(new Error("accounts is not used here")),
+};
+
+/** Nor do they reach the verification routes. */
+const unusedVerification: Verification = {
+  sendLink: () => Promise.reject(new Error("verification is not used here")),
+  verify: () => Promise.reject(new Error("verification is not used here")),
+  resend: () => Promise.reject(new Error("verification is not used here")),
 };
 
 const app = () =>
-  createApp({ db: fakeDb({ reachable: true }), accounts: unusedAccounts });
+  createApp({
+    db: fakeDb({ reachable: true }),
+    accounts: unusedAccounts,
+    verification: unusedVerification,
+    webOrigins: [],
+  });
 
 describe("api", () => {
   it("API-1: reports healthy on GET /health", async () => {
@@ -70,6 +84,8 @@ describe("api", () => {
     const response = await createApp({
       db: fakeDb({ reachable: false }),
       accounts: unusedAccounts,
+      verification: unusedVerification,
+      webOrigins: [],
     }).request("/ready");
 
     expect(response.status).toBe(503);
@@ -80,6 +96,8 @@ describe("api", () => {
     const response = await createApp({
       db: fakeDb({ reachable: false }),
       accounts: unusedAccounts,
+      verification: unusedVerification,
+      webOrigins: [],
     }).request("/health");
 
     expect(response.status).toBe(200);

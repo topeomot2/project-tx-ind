@@ -68,3 +68,19 @@ export const ChangePasswordRequestSchema = z.object({
 });
 
 export type ChangePasswordRequest = z.infer<typeof ChangePasswordRequestSchema>;
+
+/** Body of POST /email-verifications. The api decides if the token is real. */
+export const VerifyEmailRequestSchema = z.object({
+  token: z.string().min(1).max(512),
+});
+
+export type VerifyEmailRequest = z.infer<typeof VerifyEmailRequestSchema>;
+
+/** Body of POST /email-verifications/resend. */
+export const ResendVerificationRequestSchema = z.object({
+  email: EmailSchema,
+});
+
+export type ResendVerificationRequest = z.infer<
+  typeof ResendVerificationRequestSchema
+>;

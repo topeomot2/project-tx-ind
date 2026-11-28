@@ -3,7 +3,7 @@ import type { AccountStore, StoredUser } from "./accounts.ts";
 
 /** The Postgres adapter for AccountStore, plus table setup and shutdown. */
 export interface PostgresAccountStore extends AccountStore {
-  /** Creates the users table if it is missing. Safe to run at every start. */
+  /** Creates the tables if they are missing. Safe to run at every start. */
   migrate(): Promise<void>;
   /** Closes all connections. */
   close(): Promise<void>;
@@ -16,6 +16,7 @@ interface Row {
   email: string;
   password_hash: string;
   token_version: number;
+  email_verified: boolean;
 }
 
 function toStoredUser(row: Row): StoredUser {
@@ -25,6 +26,7 @@ function toStoredUser(row: Row): StoredUser {
     email: row.email,
     passwordHash: row.password_hash,
     tokenVersion: row.token_version,
+    emailVerified: row.email_verified,
   };
 }
 
@@ -45,6 +47,17 @@ export function createPostgresAccountStore(url: string): PostgresAccountStore {
           email text not null unique,
           password_hash text not null,
           token_version integer not null default 0
+        )
+      `;
+      await sql`
+        alter table users
+        add column if not exists email_verified boolean not null default false
+      `;
+      await sql`
+        create table if not exists email_verifications (
+          token_hash text primary key,
+          user_id uuid not null references users (id) on delete cascade,
+          expires_at timestamptz not null
         )
       `;
     },
@@ -82,6 +95,35 @@ export function createPostgresAccountStore(url: string): PostgresAccountStore {
         throw new Error(`No user ${userId}`);
       }
       return toStoredUser(row);
+    },
+    async endSessions(userId) {
+      const [row] = await sql<Row[]>`
+        update users
+        set token_version = token_version + 1
+        where id = ${userId}
+        returning *
+      `;
+      if (row === undefined) {
+        throw new Error(`No user ${userId}`);
+      }
+      return toStoredUser(row);
+    },
+    async markEmailVerified(userId) {
+      await sql`update users set email_verified = true where id = ${userId}`;
+    },
+    async insertVerification({ userId, tokenHash, expiresAt }) {
+      await sql`
+        insert into email_verifications (token_hash, user_id, expires_at)
+        values (${tokenHash}, ${userId}, ${expiresAt})
+      `;
+    },
+    async takeVerification(tokenHash) {
+      const [row] = await sql<{ user_id: string; expires_at: Date }[]>`
+        delete from email_verifications
+        where token_hash = ${tokenHash}
+        returning user_id, expires_at
+      `;
+      return row && { userId: row.user_id, expiresAt: row.expires_at };
     },
   };
 }

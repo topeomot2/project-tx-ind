@@ -5,7 +5,14 @@
       "path": "apps/api",
       "kind": "backend",
       "language": "ts",
-      "services": ["postgres"]
+      "services": ["postgres", "mailpit"]
+    },
+    {
+      "name": "web",
+      "path": "apps/web",
+      "kind": "frontend",
+      "language": "ts",
+      "services": []
     }
   ],
   "services": [
@@ -13,6 +20,11 @@
       "name": "postgres",
       "compose": "compose.yaml",
       "env": ["DATABASE_URL"]
+    },
+    {
+      "name": "mailpit",
+      "compose": "compose.yaml",
+      "env": ["SMTP_URL", "MAILPIT_URL"]
     }
   ],
   "locked": {

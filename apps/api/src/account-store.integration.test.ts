@@ -45,6 +45,7 @@ describe("Postgres account store", () => {
       email: "store2@example.com",
       passwordHash: "h1",
       tokenVersion: 0,
+      emailVerified: false,
     };
     expect(byEmail).toEqual(expected);
     expect(byId).toEqual(expected);
@@ -84,5 +85,60 @@ describe("Postgres account store", () => {
 
     expect(updated).toMatchObject({ passwordHash: "h2", tokenVersion: 1 });
     expect(found).toMatchObject({ passwordHash: "h2", tokenVersion: 1 });
+  });
+
+  it("STORE-6: ending sessions bumps the token version and keeps the hash", async () => {
+    const inserted = await store.insertUser({
+      name: "Store Six",
+      email: "store6@example.com",
+      passwordHash: "h1",
+    });
+    const id = inserted === "email_taken" ? "" : inserted.id;
+
+    const updated = await store.endSessions(id);
+    const found = await store.findUserById(id);
+
+    expect(updated).toMatchObject({ passwordHash: "h1", tokenVersion: 1 });
+    expect(found).toMatchObject({ passwordHash: "h1", tokenVersion: 1 });
+  });
+
+  it("STORE-7: marking the email verified shows on the user", async () => {
+    const inserted = await store.insertUser({
+      name: "Store Seven",
+      email: "store7@example.com",
+      passwordHash: "h1",
+    });
+    const id = inserted === "email_taken" ? "" : inserted.id;
+
+    await store.markEmailVerified(id);
+    const found = await store.findUserById(id);
+
+    expect(found).toEqual({
+      id,
+      name: "Store Seven",
+      email: "store7@example.com",
+      passwordHash: "h1",
+      tokenVersion: 0,
+      emailVerified: true,
+    });
+  });
+
+  it("STORE-8: a verification can be taken once", async () => {
+    const inserted = await store.insertUser({
+      name: "Store Eight",
+      email: "store8@example.com",
+      passwordHash: "h1",
+    });
+    const id = inserted === "email_taken" ? "" : inserted.id;
+    const expiresAt = new Date("2026-11-28T12:00:00.000Z");
+    await store.insertVerification({ userId: id, tokenHash: "t8", expiresAt });
+
+    const first = await store.takeVerification("t8");
+    const second = await store.takeVerification("t8");
+    const unknown = await store.takeVerification("unknown");
+
+    expect(first).toEqual({ userId: id, expiresAt });
+    expect(second).toBeUndefined();
+    expect(unknown).toBeUndefined();
   });
 });

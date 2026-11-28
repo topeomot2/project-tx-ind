@@ -1,5 +1,6 @@
 # Services the apps need. Nothing here is an app.
-#   Dev:   pnpm services:up   (Postgres on localhost:5432)
+#   Dev:   pnpm services:up   (Postgres on localhost:5432, Mailpit SMTP on
+#          localhost:1025 and its inbox at http://localhost:8025)
 #   Tests: started and removed by @repo/services, on a free port.
 services:
   postgres:
@@ -19,6 +20,21 @@ services:
       retries: 15
     volumes:
       - postgres-data:/var/lib/postgresql
+
+  # Catches every email the api sends, for dev and tests. Production sends
+  # through a real provider (Amazon SES over SMTP) instead.
+  mailpit:
+    image: axllent/mailpit:v1.34.0
+    ports:
+      # Tests set MAILPIT_SMTP_PORTS=1025 and MAILPIT_HTTP_PORTS=8025, so
+      # Docker picks free host ports.
+      - "${MAILPIT_SMTP_PORTS:-1025:1025}"
+      - "${MAILPIT_HTTP_PORTS:-8025:8025}"
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
 
 volumes:
   postgres-data:

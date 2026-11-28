@@ -1,7 +1,16 @@
 ---
 id: UCON
 status: approved
-contracts: [RegisterRequest, User, LogInRequest, Session, ChangePasswordRequest]
+contracts:
+  [
+    RegisterRequest,
+    User,
+    LogInRequest,
+    Session,
+    ChangePasswordRequest,
+    VerifyEmailRequest,
+    ResendVerificationRequest,
+  ]
 ---
 
 # User contracts
@@ -21,16 +30,18 @@ Everything a caller must know to use this module. Tests use only this.
 
 ### Exports
 
-| Export                        | Kind   | Summary                                    |
-| ----------------------------- | ------ | ------------------------------------------ |
-| `NameSchema`                  | schema | A user's display name                      |
-| `EmailSchema`                 | schema | An email address, at most 254 characters   |
-| `PasswordSchema`              | schema | A password that follows the password rules |
-| `RegisterRequestSchema`       | schema | Body of `POST /users`                      |
-| `UserSchema`                  | schema | A user as the api shows it                 |
-| `LogInRequestSchema`          | schema | Body of `POST /sessions`                   |
-| `SessionSchema`               | schema | Body of a successful log in                |
-| `ChangePasswordRequestSchema` | schema | Body of `PUT /users/me/password`           |
+| Export                            | Kind   | Summary                                    |
+| --------------------------------- | ------ | ------------------------------------------ |
+| `NameSchema`                      | schema | A user's display name                      |
+| `EmailSchema`                     | schema | An email address, at most 254 characters   |
+| `PasswordSchema`                  | schema | A password that follows the password rules |
+| `RegisterRequestSchema`           | schema | Body of `POST /users`                      |
+| `UserSchema`                      | schema | A user as the api shows it                 |
+| `LogInRequestSchema`              | schema | Body of `POST /sessions`                   |
+| `SessionSchema`                   | schema | Body of a successful log in                |
+| `ChangePasswordRequestSchema`     | schema | Body of `PUT /users/me/password`           |
+| `VerifyEmailRequestSchema`        | schema | Body of `POST /email-verifications`        |
+| `ResendVerificationRequestSchema` | schema | Body of `POST /email-verifications/resend` |
 
 Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 `NameSchema`, `EmailSchema` and `PasswordSchema`.
@@ -53,6 +64,9 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 - `ChangePasswordRequest` is `{ currentPassword, newPassword }`:
   `currentPassword` is like `LogInRequest.password`; `newPassword` follows
   the password rules.
+- `VerifyEmailRequest` is `{ token }`: any non-empty string up to 512
+  characters; the api decides whether it is a real token.
+- `ResendVerificationRequest` is `{ email }`, an `Email`.
 
 ### Error modes
 
@@ -124,6 +138,17 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
 - **Input:** passwords of 15, 128 and 129 copies of `"🔑"` (each is two
   JavaScript characters); 14 copies
 - **Expected:** valid, valid, invalid; invalid
+
+### UCON-12: VerifyEmailRequest needs a non-empty token
+
+- **Input:** `{ token: "abc" }`; `{ token: "" }`; `{}`; a 513-character
+  token
+- **Expected:** valid; invalid; invalid; invalid
+
+### UCON-13: ResendVerificationRequest needs an email
+
+- **Input:** `{ email: "ada@example.com" }`; `{ email: "ada" }`; `{}`
+- **Expected:** valid; invalid; invalid
 
 ## Invariants
 

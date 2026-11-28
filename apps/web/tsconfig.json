@@ -1,0 +1,13 @@
+{
+  "extends": "@repo/config/tsconfig/base.json",
+  "compilerOptions": {
+    // Browser code: DOM types and React's JSX. Vite bundles it, so module
+    // resolution follows the bundler, not Node.
+    "lib": ["es2024", "dom", "dom.iterable"],
+    "types": ["node", "vite/client"],
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx"
+  },
+  "include": ["src", "*.config.ts"]
+}

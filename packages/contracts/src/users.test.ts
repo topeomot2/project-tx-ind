@@ -3,8 +3,10 @@ import {
   ChangePasswordRequestSchema,
   LogInRequestSchema,
   RegisterRequestSchema,
+  ResendVerificationRequestSchema,
   SessionSchema,
   UserSchema,
+  VerifyEmailRequestSchema,
 } from "./index.ts";
 
 const register = {
@@ -165,5 +167,26 @@ describe("ChangePasswordRequestSchema", () => {
     });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe("VerifyEmailRequestSchema", () => {
+  it.each([
+    { body: { token: "abc" }, valid: true },
+    { body: { token: "" }, valid: false },
+    { body: {}, valid: false },
+    { body: { token: "t".repeat(513) }, valid: false },
+  ])("UCON-12: $body is valid: $valid", ({ body, valid }) => {
+    expect(VerifyEmailRequestSchema.safeParse(body).success).toBe(valid);
+  });
+});
+
+describe("ResendVerificationRequestSchema", () => {
+  it.each([
+    { body: { email: "ada@example.com" }, valid: true },
+    { body: { email: "ada" }, valid: false },
+    { body: {}, valid: false },
+  ])("UCON-13: $body is valid: $valid", ({ body, valid }) => {
+    expect(ResendVerificationRequestSchema.safeParse(body).success).toBe(valid);
   });
 });

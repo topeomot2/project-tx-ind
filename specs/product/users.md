@@ -51,7 +51,8 @@ who is calling.
 
 ### USER-4: A registered user can log in
 
-- **Given** `ada@example.com` registered with `correct horse battery`
+- **Given** `ada@example.com` registered with `correct horse battery` and
+  verified the email (`specs/product/email-verification.md`)
 - **When** a caller sends `POST /sessions` with a `LogInRequest` body
   `{ email: "ada@example.com", password: "correct horse battery" }`
 - **Then** it gets status `200` and a `Session` body with a `token` (a JWT)
@@ -109,13 +110,50 @@ who is calling.
 - **Then** it gets status `400` and an `ApiError` with
   `code: "validation_failed"`, and the old password still logs in
 
+### USER-11: A logged-in user can read their own account
+
+- **Given** `ada@example.com` registered with the name `Ada Lovelace` and
+  is logged in with token `T`
+- **When** a caller sends `GET /users/me` with `Authorization: Bearer T`
+- **Then** it gets status `200` and a `User` body with
+  `name: "Ada Lovelace"` and `email: "ada@example.com"`
+
+### USER-12: Reading your own account needs a valid session
+
+- **Given** the api is running
+- **When** a caller sends `GET /users/me` with no `Authorization` header,
+  with a value that is not a JWT, or with a JWT the api did not sign
+- **Then** it gets status `401` and an `ApiError` with
+  `code: "unauthenticated"`
+
+### USER-13: Logging out ends every session of that user
+
+- **Given** `ada@example.com` is logged in twice, with tokens `T1` and
+  `T2`, and `grace@example.com` is logged in with token `T3`
+- **When** a caller sends `DELETE /users/me/sessions` with
+  `Authorization: Bearer T1`
+- **Then** it gets status `204` with no body; after that, `GET /users/me`
+  with `T1` or `T2` gets `401` and `code: "unauthenticated"`, `T3` still
+  works, and Ada can log in again with her password
+
+### USER-14: Logging out needs a valid session
+
+- **Given** the api is running
+- **When** a caller sends `DELETE /users/me/sessions` with no
+  `Authorization` header, or with a value that is not a JWT
+- **Then** it gets status `401` and an `ApiError` with
+  `code: "unauthenticated"`
+
 Expired tokens are rejected too; that is checked in
 `specs/modules/accounts.md` (ACC-6, ACC-9), because an E2E test cannot wait
 24 hours.
 
 ## Out of scope
 
-- Logging out, password reset by email, email verification.
+- Password reset by email, email verification.
+- Ending one session only: logging out ends them all (USER-13).
+- Email verification is its own spec:
+  `specs/product/email-verification.md`.
 - Rate limiting and account lockout after failed logins.
 - Checking passwords against breach lists.
 - Roles and permissions.
@@ -132,10 +170,25 @@ Answered by Temitope, 2026-11-27:
 - Password rules: 15 to 128 characters, counted as Unicode code points;
   any characters; no composition rules. Passwords are normalized with
   Unicode NFKC before hashing.
-- Email: compared without case, stored lowercased; no verification email.
+- Email: compared without case, stored lowercased. (Changed 2026-11-28:
+  a verification email is now sent; see
+  `specs/product/email-verification.md`.)
 - Registering a taken email answers `409 email_taken`, accepting that it
   reveals the email has an account.
 - Registering returns only the `User`; the caller logs in next.
 - Name: one display name, required, 1 to 100 characters after trimming
   outer spaces, any characters, not unique.
 - None open.
+
+Answered for the web app (spec approved by Temitope, 2026-11-28):
+
+- Logging out bumps the user's token version, the same way a password
+  change does, so it ends every session of that user on every device
+  (agreed by Temitope, 2026-11-28).
+  This needs no new table. Ending only the current session would need a
+  list of revoked tokens (`jti`) kept until they expire.
+- `GET /users/me` gives the web app the name to show, because a `Session`
+  holds only the token.
+- The token stays a bearer token in the `Authorization` header, not a
+  cookie, so the web app and the api can be deployed to different origins
+  (`specs/product/web-access.md`; agreed by Temitope, 2026-11-28).
