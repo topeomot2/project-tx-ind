@@ -109,13 +109,48 @@ who is calling.
 - **Then** it gets status `400` and an `ApiError` with
   `code: "validation_failed"`, and the old password still logs in
 
+### USER-11: A logged-in user can read their own account [draft]
+
+- **Given** `ada@example.com` registered with the name `Ada Lovelace` and
+  is logged in with token `T`
+- **When** a caller sends `GET /users/me` with `Authorization: Bearer T`
+- **Then** it gets status `200` and a `User` body with
+  `name: "Ada Lovelace"` and `email: "ada@example.com"`
+
+### USER-12: Reading your own account needs a valid session [draft]
+
+- **Given** the api is running
+- **When** a caller sends `GET /users/me` with no `Authorization` header,
+  with a value that is not a JWT, or with a JWT the api did not sign
+- **Then** it gets status `401` and an `ApiError` with
+  `code: "unauthenticated"`
+
+### USER-13: Logging out ends every session of that user [draft]
+
+- **Given** `ada@example.com` is logged in twice, with tokens `T1` and
+  `T2`, and `grace@example.com` is logged in with token `T3`
+- **When** a caller sends `DELETE /users/me/sessions` with
+  `Authorization: Bearer T1`
+- **Then** it gets status `204` with no body; after that, `GET /users/me`
+  with `T1` or `T2` gets `401` and `code: "unauthenticated"`, `T3` still
+  works, and Ada can log in again with her password
+
+### USER-14: Logging out needs a valid session [draft]
+
+- **Given** the api is running
+- **When** a caller sends `DELETE /users/me/sessions` with no
+  `Authorization` header, or with a value that is not a JWT
+- **Then** it gets status `401` and an `ApiError` with
+  `code: "unauthenticated"`
+
 Expired tokens are rejected too; that is checked in
 `specs/modules/accounts.md` (ACC-6, ACC-9), because an E2E test cannot wait
 24 hours.
 
 ## Out of scope
 
-- Logging out, password reset by email, email verification.
+- Password reset by email, email verification.
+- Ending one session only: logging out ends them all (USER-13).
 - Rate limiting and account lockout after failed logins.
 - Checking passwords against breach lists.
 - Roles and permissions.
@@ -139,3 +174,12 @@ Answered by Temitope, 2026-11-27:
 - Name: one display name, required, 1 to 100 characters after trimming
   outer spaces, any characters, not unique.
 - None open.
+
+Proposed for the web app, to be answered with USER-11 to USER-14:
+
+- Logging out bumps the user's token version, the same way a password
+  change does, so it ends every session of that user on every device.
+  This needs no new table. Ending only the current session would need a
+  list of revoked tokens (`jti`) kept until they expire.
+- `GET /users/me` gives the web app the name to show, because a `Session`
+  holds only the token.

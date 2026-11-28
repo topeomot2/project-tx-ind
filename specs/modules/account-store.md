@@ -80,6 +80,12 @@ each other.
 - **Expected:** `setPasswordHash` and the find both give
   `passwordHash: "h2"` and `tokenVersion: 1`
 
+### STORE-6: Ending sessions bumps the token version and keeps the hash [draft]
+
+- **Input:** insert a user with `"h1"`, `endSessions(id)`, then find it
+- **Expected:** `endSessions` and the find both give `passwordHash: "h1"`
+  and `tokenVersion: 1`
+
 ## Invariants
 
 - None yet.

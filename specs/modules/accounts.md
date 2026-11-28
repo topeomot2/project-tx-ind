@@ -23,13 +23,13 @@ Everything a caller must know to use this module. Tests use only this.
 
 ### Exports
 
-| Export           | Kind     | Summary                                                       |
-| ---------------- | -------- | ------------------------------------------------------------- |
-| `createAccounts` | function | `createAccounts({ store, now, jwtSecret })`: an `Accounts`    |
-| `Accounts`       | type     | `register`, `logIn`, `authenticate`, `changePassword` (below) |
-| `AccountStore`   | type     | What accounts needs from storage (the seam)                   |
-| `StoredUser`     | type     | `{ id, name, email, passwordHash, tokenVersion }`             |
-| `Result`         | type     | `{ ok: true, value } \| { ok: false, code }`                  |
+| Export           | Kind     | Summary                                                                 |
+| ---------------- | -------- | ----------------------------------------------------------------------- |
+| `createAccounts` | function | `createAccounts({ store, now, jwtSecret })`: an `Accounts`              |
+| `Accounts`       | type     | `register`, `logIn`, `authenticate`, `changePassword`, `logOut` (below) |
+| `AccountStore`   | type     | What accounts needs from storage (the seam)                             |
+| `StoredUser`     | type     | `{ id, name, email, passwordHash, tokenVersion }`                       |
+| `Result`         | type     | `{ ok: true, value } \| { ok: false, code }`                            |
 
 `Accounts` (all async):
 
@@ -39,6 +39,7 @@ Everything a caller must know to use this module. Tests use only this.
 | `logIn(LogInRequest)`                          | `Result<Session, "invalid_credentials">`                      |
 | `authenticate(token)`                          | `User \| undefined`                                           |
 | `changePassword(token, ChangePasswordRequest)` | `Result<Session, "unauthenticated" \| "invalid_credentials">` |
+| `logOut(token)`                                | `Result<null, "unauthenticated">`                             |
 
 `now: () => Date` is the clock, `store: AccountStore` the storage, and
 `jwtSecret: string` the HS256 signing key.
@@ -51,6 +52,7 @@ Everything a caller must know to use this module. Tests use only this.
 | `findUserByEmail(email)`                    | `StoredUser \| undefined`; exact match                                                      |
 | `findUserById(id)`                          | `StoredUser \| undefined`                                                                   |
 | `setPasswordHash(userId, passwordHash)`     | Replaces the hash and adds 1 to `tokenVersion`; returns the updated `StoredUser`            |
+| `endSessions(userId)`                       | Adds 1 to `tokenVersion` and keeps the hash; returns the updated `StoredUser`               |
 
 Rules a caller can rely on:
 
@@ -66,17 +68,19 @@ Rules a caller can rely on:
 - A password change bumps `tokenVersion`, so every token issued before it
   stops working, including the one that made the change. The change
   returns a new `Session` instead.
+- Logging out bumps `tokenVersion` too, so every token of that user
+  stops working, on every device. The password does not change.
 - The store only ever gets a password hash, never the password.
 
 ### Error modes
 
-| Situation                                                         | Result                                                                         |
-| ----------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Register an email that exists, in any case                        | `{ ok: false, code: "email_taken" }`                                           |
-| Log in with a wrong password or unknown email                     | `{ ok: false, code: "invalid_credentials" }`                                   |
-| Token malformed, wrongly signed, expired or from an older version | `authenticate` returns `undefined`; `changePassword` returns `unauthenticated` |
-| Wrong `currentPassword`                                           | `{ ok: false, code: "invalid_credentials" }`, nothing changes                  |
-| The store throws                                                  | The error is passed on to the caller                                           |
+| Situation                                                         | Result                                                                                     |
+| ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Register an email that exists, in any case                        | `{ ok: false, code: "email_taken" }`                                                       |
+| Log in with a wrong password or unknown email                     | `{ ok: false, code: "invalid_credentials" }`                                               |
+| Token malformed, wrongly signed, expired or from an older version | `authenticate` returns `undefined`; `changePassword` and `logOut` return `unauthenticated` |
+| Wrong `currentPassword`                                           | `{ ok: false, code: "invalid_credentials" }`, nothing changes                              |
+| The store throws                                                  | The error is passed on to the caller                                                       |
 
 ### Configuration
 
@@ -155,6 +159,20 @@ fixed clock and a fixed test secret.
 - **Input:** register, log in and change the password, recording every
   value the in-memory store receives
 - **Expected:** no recorded value contains the old or the new password
+
+### ACC-14: Log out ends every token of that user only [draft]
+
+- **Input:** user A logs in twice (`T1`, `T2`), user B once (`T3`);
+  `logOut(T1)`
+- **Expected:** `{ ok: true, value: null }`; `authenticate` gives
+  `undefined` for `T1` and `T2` and B for `T3`; A logs in again with the
+  same password and the new token authenticates
+
+### ACC-15: Log out needs a valid token [draft]
+
+- **Input:** `logOut` with `"not-a-jwt"`, and with a token after it has
+  expired
+- **Expected:** `{ ok: false, code: "unauthenticated" }` each time
 
 ## Invariants
 

@@ -36,7 +36,8 @@ Everything a caller must know to use this module. Tests use only this.
 | Body that is not valid JSON or does not match its contract | `400`, `code: "validation_failed"`; `details` names the fields |
 
 The user routes (`POST /users`, `POST /sessions`,
-`PUT /users/me/password`) are thin: they parse the body with the
+`PUT /users/me/password`, `GET /users/me`, `DELETE /users/me/sessions`)
+are thin: they parse the body with the
 contract, call `accounts` (`specs/modules/accounts.md`) and map its result
 to HTTP as `specs/product/users.md` says. They are tested by the E2E
 tests for that spec.
