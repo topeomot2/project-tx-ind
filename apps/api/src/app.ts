@@ -1,4 +1,5 @@
 import {
+  ChangePasswordRequestSchema,
   LogInRequestSchema,
   RegisterRequestSchema,
   type ApiError,
@@ -73,6 +74,29 @@ export function createApp({ db, accounts }: AppDeps): Hono {
     return c.json(result.value satisfies Session);
   });
 
+  app.put("/users/me/password", async (c) => {
+    const token = /^Bearer (\S+)$/.exec(
+      c.req.header("authorization") ?? "",
+    )?.[1];
+    if (token === undefined) {
+      return c.json(unauthenticated, 401);
+    }
+    const body = await parseBody(c.req.raw, ChangePasswordRequestSchema);
+    if (!body.ok) {
+      return c.json(body.error, 400);
+    }
+    const result = await accounts.changePassword(token, body.value);
+    if (!result.ok) {
+      return c.json(
+        result.code === "unauthenticated"
+          ? unauthenticated
+          : invalidCredentials,
+        401,
+      );
+    }
+    return c.json(result.value satisfies Session);
+  });
+
   app.notFound((c) =>
     c.json(
       {
@@ -102,6 +126,11 @@ export function createApp({ db, accounts }: AppDeps): Hono {
 const invalidCredentials: ApiError = {
   code: "invalid_credentials",
   message: "The email or password is wrong.",
+};
+
+const unauthenticated: ApiError = {
+  code: "unauthenticated",
+  message: "A valid bearer token is needed.",
 };
 
 type Parsed<T> = { ok: true; value: T } | { ok: false; error: ApiError };
