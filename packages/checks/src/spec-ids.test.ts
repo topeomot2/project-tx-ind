@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { compareIds, idsFromSpec, idsFromTestSource } from "./spec-ids.ts";
+import {
+  approvedIds,
+  compareIds,
+  idsFromSpec,
+  idsFromTestSource,
+} from "./spec-ids.ts";
 
 describe("spec IDs", () => {
   it("CHK-1: reads status and requirement IDs from a spec, skipping struck-through ones", () => {
@@ -17,7 +22,37 @@ describe("spec IDs", () => {
     expect(idsFromSpec(spec)).toEqual({
       status: "approved",
       ids: ["SHOP-1", "SHOP-3"],
+      drafts: [],
     });
+  });
+
+  it("CHK-14: reads requirements marked [draft] in a spec", () => {
+    const spec = [
+      "---",
+      "status: approved",
+      "---",
+      "### SHOP-1: Lists items",
+      "### SHOP-4: Adds a coupon [draft]",
+      "### ~~SHOP-5: Retired [draft]~~",
+    ].join("\n");
+
+    expect(idsFromSpec(spec)).toEqual({
+      status: "approved",
+      ids: ["SHOP-1", "SHOP-4"],
+      drafts: ["SHOP-4"],
+    });
+  });
+
+  it("CHK-15: approved IDs are the live, unmarked ones of an approved spec", () => {
+    const body = [
+      "### SHOP-1: Lists items",
+      "### SHOP-4: Adds a coupon [draft]",
+    ];
+    const spec = (status: string) =>
+      ["---", `status: ${status}`, "---", ...body].join("\n");
+
+    expect(approvedIds(spec("approved"))).toEqual(["SHOP-1"]);
+    expect(approvedIds(spec("draft"))).toEqual([]);
   });
 
   it("CHK-2: reads the IDs that test names start with, and no other IDs", () => {
