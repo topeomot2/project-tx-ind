@@ -1,6 +1,6 @@
 ---
 id: MAIL
-status: draft
+status: approved
 contracts: []
 ---
 

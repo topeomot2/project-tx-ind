@@ -1,6 +1,6 @@
 ---
 id: WCL
-status: draft
+status: approved
 contracts: [ApiError, RegisterRequest, User, LogInRequest, Session]
 ---
 

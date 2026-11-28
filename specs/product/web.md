@@ -1,6 +1,6 @@
 ---
 id: WEB
-status: draft
+status: approved
 contracts:
   [
     ApiError,
@@ -152,7 +152,7 @@ Answered by Temitope, 2026-11-28:
 - Bearer tokens, not cookies, so the web app and the api can be on
   different origins (`web-access.md`).
 
-Proposed answers, approved with this spec:
+Proposed answers, approved with this spec by Temitope, 2026-11-28:
 
 - The session (token and `expiresAt`) is kept in the browser's
   `localStorage`, so it survives a reload and closing the tab until it

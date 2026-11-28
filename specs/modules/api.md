@@ -121,7 +121,7 @@ unless they say otherwise, and it appears in the result.
 - **Input:** no `JWT_SECRET`; a 31-character one; a 32-character one
 - **Expected:** throws; throws; returns it as `JWT_SECRET`
 
-### API-11: parseEnv reads the web and mail settings [draft]
+### API-11: parseEnv reads the web and mail settings
 
 - **Input:** none of them set; then `WEB_URL="https://app.example.com"`,
   `WEB_ORIGINS="https://app.example.com, https://admin.example.com"`,
@@ -133,7 +133,7 @@ unless they say otherwise, and it appears in the result.
   then those values, with `WEB_ORIGINS` as
   `["https://app.example.com", "https://admin.example.com"]`
 
-### API-12: parseEnv rejects bad web and mail settings [draft]
+### API-12: parseEnv rejects bad web and mail settings
 
 - **Input:** `WEB_URL="app"`; `WEB_ORIGINS="not a url"`;
   `MAIL_FROM="nobody"`

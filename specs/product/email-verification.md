@@ -1,6 +1,6 @@
 ---
 id: VERIFY
-status: draft
+status: approved
 contracts:
   [ApiError, RegisterRequest, VerifyEmailRequest, ResendVerificationRequest]
 ---

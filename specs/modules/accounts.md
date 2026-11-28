@@ -167,7 +167,7 @@ user who logs in has had `markEmailVerified` called on the store first.
   value the in-memory store receives
 - **Expected:** no recorded value contains the old or the new password
 
-### ACC-14: Log out ends every token of that user only [draft]
+### ACC-14: Log out ends every token of that user only
 
 - **Input:** user A logs in twice (`T1`, `T2`), user B once (`T3`);
   `logOut(T1)`
@@ -175,13 +175,13 @@ user who logs in has had `markEmailVerified` called on the store first.
   `undefined` for `T1` and `T2` and B for `T3`; A logs in again with the
   same password and the new token authenticates
 
-### ACC-15: Log out needs a valid token [draft]
+### ACC-15: Log out needs a valid token
 
 - **Input:** `logOut` with `"not-a-jwt"`, and with a token after it has
   expired
 - **Expected:** `{ ok: false, code: "unauthenticated" }` each time
 
-### ACC-16: Log in needs a verified email [draft]
+### ACC-16: Log in needs a verified email
 
 - **Input:** register Ada and do not verify; log in with her password;
   log in with a wrong password; `markEmailVerified` on the store, then

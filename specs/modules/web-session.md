@@ -1,6 +1,6 @@
 ---
 id: WSES
-status: draft
+status: approved
 contracts: [Session]
 ---
 

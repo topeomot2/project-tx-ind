@@ -139,13 +139,13 @@ Each schema `XSchema` has a type `X = z.infer<typeof XSchema>`, except
   JavaScript characters); 14 copies
 - **Expected:** valid, valid, invalid; invalid
 
-### UCON-12: VerifyEmailRequest needs a non-empty token [draft]
+### UCON-12: VerifyEmailRequest needs a non-empty token
 
 - **Input:** `{ token: "abc" }`; `{ token: "" }`; `{}`; a 513-character
   token
 - **Expected:** valid; invalid; invalid; invalid
 
-### UCON-13: ResendVerificationRequest needs an email [draft]
+### UCON-13: ResendVerificationRequest needs an email
 
 - **Input:** `{ email: "ada@example.com" }`; `{ email: "ada" }`; `{}`
 - **Expected:** valid; invalid; invalid

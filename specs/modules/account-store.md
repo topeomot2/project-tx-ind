@@ -83,18 +83,18 @@ each other.
 - **Expected:** `setPasswordHash` and the find both give
   `passwordHash: "h2"` and `tokenVersion: 1`
 
-### STORE-6: Ending sessions bumps the token version and keeps the hash [draft]
+### STORE-6: Ending sessions bumps the token version and keeps the hash
 
 - **Input:** insert a user with `"h1"`, `endSessions(id)`, then find it
 - **Expected:** `endSessions` and the find both give `passwordHash: "h1"`
   and `tokenVersion: 1`
 
-### STORE-7: Marking the email verified shows on the user [draft]
+### STORE-7: Marking the email verified shows on the user
 
 - **Input:** insert a user, `markEmailVerified(id)`, then find it
 - **Expected:** `emailVerified: true`, other fields unchanged
 
-### STORE-8: A verification can be taken once [draft]
+### STORE-8: A verification can be taken once
 
 - **Input:** insert a user;
   `insertVerification({ userId: id, tokenHash: "t8", expiresAt: 2026-11-28T12:00:00.000Z })`;

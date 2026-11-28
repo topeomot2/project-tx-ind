@@ -110,7 +110,7 @@ who is calling.
 - **Then** it gets status `400` and an `ApiError` with
   `code: "validation_failed"`, and the old password still logs in
 
-### USER-11: A logged-in user can read their own account [draft]
+### USER-11: A logged-in user can read their own account
 
 - **Given** `ada@example.com` registered with the name `Ada Lovelace` and
   is logged in with token `T`
@@ -118,7 +118,7 @@ who is calling.
 - **Then** it gets status `200` and a `User` body with
   `name: "Ada Lovelace"` and `email: "ada@example.com"`
 
-### USER-12: Reading your own account needs a valid session [draft]
+### USER-12: Reading your own account needs a valid session
 
 - **Given** the api is running
 - **When** a caller sends `GET /users/me` with no `Authorization` header,
@@ -126,7 +126,7 @@ who is calling.
 - **Then** it gets status `401` and an `ApiError` with
   `code: "unauthenticated"`
 
-### USER-13: Logging out ends every session of that user [draft]
+### USER-13: Logging out ends every session of that user
 
 - **Given** `ada@example.com` is logged in twice, with tokens `T1` and
   `T2`, and `grace@example.com` is logged in with token `T3`
@@ -136,7 +136,7 @@ who is calling.
   with `T1` or `T2` gets `401` and `code: "unauthenticated"`, `T3` still
   works, and Ada can log in again with her password
 
-### USER-14: Logging out needs a valid session [draft]
+### USER-14: Logging out needs a valid session
 
 - **Given** the api is running
 - **When** a caller sends `DELETE /users/me/sessions` with no
@@ -180,7 +180,7 @@ Answered by Temitope, 2026-11-27:
   outer spaces, any characters, not unique.
 - None open.
 
-Proposed for the web app, to be answered with USER-11 to USER-14:
+Answered for the web app (spec approved by Temitope, 2026-11-28):
 
 - Logging out bumps the user's token version, the same way a password
   change does, so it ends every session of that user on every device

@@ -1,6 +1,6 @@
 ---
 id: WFORM
-status: draft
+status: approved
 contracts: [RegisterRequest]
 ---
 

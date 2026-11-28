@@ -1,6 +1,6 @@
 ---
 id: EVER
-status: draft
+status: approved
 contracts: [User]
 ---
 

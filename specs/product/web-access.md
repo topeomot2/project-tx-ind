@@ -1,6 +1,6 @@
 ---
 id: ACCESS
-status: draft
+status: approved
 contracts: [ApiError]
 ---
 

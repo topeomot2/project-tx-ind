@@ -1,6 +1,6 @@
 ---
 id: WAPP
-status: draft
+status: approved
 contracts: []
 ---
 
