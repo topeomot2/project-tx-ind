@@ -1,7 +1,7 @@
 // Every requirement in an approved spec has a test, and every test names a
 // real requirement. Run: pnpm check:spec-ids
 import { globSync } from "node:fs";
-import { compareIds, idsFromSpec, idsFromTestSource } from "../spec-ids.ts";
+import { approvedIds, compareIds, idsFromTestSource } from "../spec-ids.ts";
 import { readText, report, root } from "./shared.ts";
 
 const specFiles = globSync("specs/**/*.md", {
@@ -17,10 +17,7 @@ const testFiles = globSync(
   { cwd: root },
 );
 
-const approved = specFiles.flatMap((file) => {
-  const spec = idsFromSpec(readText(file));
-  return spec.status === "approved" ? spec.ids : [];
-});
+const approved = specFiles.flatMap((file) => approvedIds(readText(file)));
 const tested = testFiles.flatMap((file) => idsFromTestSource(readText(file)));
 const { untested, unknown } = compareIds(approved, tested);
 
