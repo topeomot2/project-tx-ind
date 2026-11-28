@@ -1,3 +1,5 @@
+import { createTransport } from "nodemailer";
+
 /** One plain-text email. */
 export interface Email {
   to: string;
@@ -10,12 +12,22 @@ export interface Mailer {
   send(email: Email): Promise<void>;
 }
 
-/** Stub: the implementation follows specs/modules/mailer.md. */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- stub: the implementation uses it
-export function createSmtpMailer(_options: {
+/** An SMTP Mailer. See specs/modules/mailer.md. */
+export function createSmtpMailer({
+  url,
+  from,
+}: {
   url: string;
   from: string;
 }): Mailer & { close(): Promise<void> } {
-  const notImplemented = () => Promise.reject(new Error("NotImplemented"));
-  return { send: notImplemented, close: notImplemented };
+  const transport = createTransport(url);
+  return {
+    async send({ to, subject, text }) {
+      await transport.sendMail({ from, to, subject, text });
+    },
+    close() {
+      transport.close();
+      return Promise.resolve();
+    },
+  };
 }

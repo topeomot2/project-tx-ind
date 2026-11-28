@@ -17,21 +17,22 @@ const accounts = createAccounts({
   jwtSecret: env.JWT_SECRET,
 });
 
-// Stub wiring: the implementation reads these from parseEnv (API-11).
-const mailer = createSmtpMailer({
-  url: "smtp://localhost:1025",
-  from: "no-reply@localhost",
-});
+const mailer = createSmtpMailer({ url: env.SMTP_URL, from: env.MAIL_FROM });
 const verification = createVerification({
   store,
   mailer,
   now: () => new Date(),
-  webUrl: "http://localhost:5173",
+  webUrl: env.WEB_URL.replace(/\/+$/, ""),
 });
 
 const server = serve(
   {
-    fetch: createApp({ db, accounts, verification, webOrigins: [] }).fetch,
+    fetch: createApp({
+      db,
+      accounts,
+      verification,
+      webOrigins: env.WEB_ORIGINS,
+    }).fetch,
     port: env.PORT,
   },
   (info) => {
@@ -44,5 +45,6 @@ for (const signal of ["SIGINT", "SIGTERM"] as const) {
     server.close();
     void db.close();
     void store.close();
+    void mailer.close();
   });
 }
