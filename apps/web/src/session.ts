@@ -1,4 +1,4 @@
-import type { Session } from "@repo/contracts";
+import { SessionSchema, type Session } from "@repo/contracts";
 
 /** The part of the browser's Storage the session store needs. */
 export type SessionStorage = Pick<
@@ -19,11 +19,43 @@ export interface SessionStoreDeps {
   now: () => Date;
 }
 
-/** Stub: the implementation follows specs/modules/web-session.md. */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- stub: the implementation uses it
-export function createSessionStore(_deps: SessionStoreDeps): SessionStore {
-  const notImplemented = () => {
-    throw new Error("NotImplemented");
+const key = "session";
+
+export function createSessionStore({
+  storage,
+  now,
+}: SessionStoreDeps): SessionStore {
+  /** The saved session, or undefined if there is none or it is damaged. */
+  function saved(): Session | undefined {
+    const raw = storage.getItem(key);
+    if (raw === null) {
+      return undefined;
+    }
+    try {
+      const parsed = SessionSchema.safeParse(JSON.parse(raw));
+      return parsed.success ? parsed.data : undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
+  return {
+    save(session) {
+      storage.setItem(key, JSON.stringify(session));
+    },
+    token() {
+      const session = saved();
+      if (
+        session === undefined ||
+        now().getTime() >= Date.parse(session.expiresAt)
+      ) {
+        storage.removeItem(key);
+        return undefined;
+      }
+      return session.token;
+    },
+    clear() {
+      storage.removeItem(key);
+    },
   };
-  return { save: notImplemented, token: notImplemented, clear: notImplemented };
 }

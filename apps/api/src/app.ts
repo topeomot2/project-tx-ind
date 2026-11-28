@@ -2,12 +2,15 @@ import {
   ChangePasswordRequestSchema,
   LogInRequestSchema,
   RegisterRequestSchema,
+  ResendVerificationRequestSchema,
+  VerifyEmailRequestSchema,
   type ApiError,
   type Health,
   type Session,
   type User,
 } from "@repo/contracts";
 import { Hono } from "hono";
+import { cors } from "hono/cors";
 import { z } from "zod";
 import type { Accounts } from "./accounts.ts";
 import type { Db } from "./db.ts";
@@ -26,9 +29,25 @@ export interface AppDeps {
  * `app.request()` directly and the entry point (server.ts) stays tiny.
  * Dependencies come in as parameters, so tests can pass fakes.
  */
-export function createApp({ db, accounts }: AppDeps): Hono {
+export function createApp({
+  db,
+  accounts,
+  verification,
+  webOrigins,
+}: AppDeps): Hono {
   const app = new Hono();
   const healthy: Health = { status: "ok", app: "api" };
+
+  // CORS: only the web app origins we were given (web-access.md). An
+  // unknown origin gets no Access-Control-Allow-Origin header.
+  app.use(
+    "*",
+    cors({
+      origin: (origin) => (webOrigins.includes(origin) ? origin : null),
+      allowMethods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+      allowHeaders: ["content-type", "authorization"],
+    }),
+  );
 
   // Liveness: the process is up. Never touches dependencies.
   app.get("/health", (c) => c.json(healthy));
@@ -63,6 +82,7 @@ export function createApp({ db, accounts }: AppDeps): Hono {
         409,
       );
     }
+    await verification.sendLink(result.value);
     return c.json(result.value satisfies User, 201);
   });
 
@@ -73,15 +93,69 @@ export function createApp({ db, accounts }: AppDeps): Hono {
     }
     const result = await accounts.logIn(body.value);
     if (!result.ok) {
-      return c.json(invalidCredentials, 401);
+      return result.code === "email_not_verified"
+        ? c.json(
+            {
+              code: "email_not_verified",
+              message: "Verify your email before logging in.",
+            } satisfies ApiError,
+            403,
+          )
+        : c.json(invalidCredentials, 401);
     }
     return c.json(result.value satisfies Session);
   });
 
+  app.get("/users/me", async (c) => {
+    const token = bearerToken(c.req.header("authorization"));
+    const user =
+      token === undefined ? undefined : await accounts.authenticate(token);
+    if (user === undefined) {
+      return c.json(unauthenticated, 401);
+    }
+    return c.json(user satisfies User);
+  });
+
+  app.delete("/users/me/sessions", async (c) => {
+    const token = bearerToken(c.req.header("authorization"));
+    const result =
+      token === undefined ? undefined : await accounts.logOut(token);
+    if (result?.ok !== true) {
+      return c.json(unauthenticated, 401);
+    }
+    return c.body(null, 204);
+  });
+
+  // Email verification routes: specs/product/email-verification.md.
+  app.post("/email-verifications", async (c) => {
+    const body = await parseBody(c.req.raw, VerifyEmailRequestSchema);
+    if (!body.ok) {
+      return c.json(body.error, 400);
+    }
+    const result = await verification.verify(body.value.token);
+    if (!result.ok) {
+      return c.json(
+        {
+          code: "invalid_token",
+          message: "This link is not valid.",
+        } satisfies ApiError,
+        400,
+      );
+    }
+    return c.body(null, 204);
+  });
+
+  app.post("/email-verifications/resend", async (c) => {
+    const body = await parseBody(c.req.raw, ResendVerificationRequestSchema);
+    if (!body.ok) {
+      return c.json(body.error, 400);
+    }
+    await verification.resend(body.value.email);
+    return c.body(null, 202);
+  });
+
   app.put("/users/me/password", async (c) => {
-    const token = /^Bearer (\S+)$/.exec(
-      c.req.header("authorization") ?? "",
-    )?.[1];
+    const token = bearerToken(c.req.header("authorization"));
     if (token === undefined) {
       return c.json(unauthenticated, 401);
     }
@@ -136,6 +210,11 @@ const unauthenticated: ApiError = {
   code: "unauthenticated",
   message: "A valid bearer token is needed.",
 };
+
+/** The token of an `Authorization: Bearer <token>` header, if there is one. */
+function bearerToken(header: string | undefined): string | undefined {
+  return /^Bearer (\S+)$/.exec(header ?? "")?.[1];
+}
 
 type Parsed<T> = { ok: true; value: T } | { ok: false; error: ApiError };
 
